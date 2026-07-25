@@ -6,6 +6,7 @@ import SwiftUI
 final class HistoryViewModel {
     var entries: [HistoryEntry] = []
     var errorMessage: String?
+    var isClearing = false
     private let cache: FactCaching
 
     init(cache: FactCaching) {
@@ -36,10 +37,23 @@ final class HistoryViewModel {
             }
         }
     }
+
+    func clearCache() async {
+        isClearing = true
+        defer { isClearing = false }
+        do {
+            try await cache.clear()
+            entries = []
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 }
 
 struct HistoryView: View {
     @State var viewModel: HistoryViewModel
+    @State private var showsClearConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -79,8 +93,30 @@ struct HistoryView: View {
             .navigationTitle("Historique")
             .toolbar {
                 if !viewModel.entries.isEmpty {
-                    EditButton()
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        EditButton()
+                        Button(role: .destructive) {
+                            showsClearConfirmation = true
+                        } label: {
+                            Label("Vider le cache", systemImage: "trash")
+                        }
+                        .disabled(viewModel.isClearing)
+                    }
                 }
+            }
+            .confirmationDialog(
+                "Vider tout le cache ?",
+                isPresented: $showsClearConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Vider le cache", role: .destructive) {
+                    Task {
+                        await viewModel.clearCache()
+                    }
+                }
+                Button("Annuler", role: .cancel) {}
+            } message: {
+                Text("Toutes les analyses et les photos de l’historique seront supprimées.")
             }
             .task {
                 await viewModel.load()

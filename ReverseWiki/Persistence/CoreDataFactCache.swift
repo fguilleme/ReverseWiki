@@ -3,10 +3,20 @@ import CoreLocation
 import CryptoKit
 
 protocol FactCaching {
-    func fact(for coordinate: CLLocationCoordinate2D?, imageData: Data) async throws -> PlaceFact?
-    func save(_ fact: PlaceFact, for coordinate: CLLocationCoordinate2D?, imageData: Data) async throws
+    func fact(
+        for coordinate: CLLocationCoordinate2D?,
+        imageData: Data,
+        cacheIdentifier: String
+    ) async throws -> PlaceFact?
+    func save(
+        _ fact: PlaceFact,
+        for coordinate: CLLocationCoordinate2D?,
+        imageData: Data,
+        cacheIdentifier: String
+    ) async throws
     func history() async throws -> [HistoryEntry]
     func deleteHistoryEntries(ids: [String]) async throws
+    func clear() async throws
 }
 
 final class CoreDataFactCache: FactCaching {
@@ -39,8 +49,16 @@ final class CoreDataFactCache: FactCaching {
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
 
-    func fact(for coordinate: CLLocationCoordinate2D?, imageData: Data) async throws -> PlaceFact? {
-        let key = Self.coordinateKey(for: coordinate, imageData: imageData)
+    func fact(
+        for coordinate: CLLocationCoordinate2D?,
+        imageData: Data,
+        cacheIdentifier: String
+    ) async throws -> PlaceFact? {
+        let key = Self.coordinateKey(
+            for: coordinate,
+            imageData: imageData,
+            cacheIdentifier: cacheIdentifier
+        )
         let context = container.newBackgroundContext()
         return try await context.perform {
             let request = NSFetchRequest<NSManagedObject>(entityName: Field.entity)
@@ -56,9 +74,14 @@ final class CoreDataFactCache: FactCaching {
     func save(
         _ fact: PlaceFact,
         for coordinate: CLLocationCoordinate2D?,
-        imageData: Data
+        imageData: Data,
+        cacheIdentifier: String
     ) async throws {
-        let key = Self.coordinateKey(for: coordinate, imageData: imageData)
+        let key = Self.coordinateKey(
+            for: coordinate,
+            imageData: imageData,
+            cacheIdentifier: cacheIdentifier
+        )
         let payload = try JSONEncoder().encode(fact)
         let context = container.newBackgroundContext()
         try await context.perform {
@@ -122,16 +145,32 @@ final class CoreDataFactCache: FactCaching {
         }
     }
 
+    func clear() async throws {
+        let context = container.newBackgroundContext()
+        try await context.perform {
+            let request = NSFetchRequest<NSManagedObject>(entityName: Field.entity)
+            try context.fetch(request).forEach(context.delete)
+            if context.hasChanges {
+                try context.save()
+            }
+        }
+    }
+
     static func coordinateKey(
         for coordinate: CLLocationCoordinate2D?,
-        imageData: Data
+        imageData: Data,
+        cacheIdentifier: String = "legacy"
     ) -> String {
         let digest = SHA256.hash(data: imageData)
         let imageFingerprint = digest.prefix(8).map { String(format: "%02x", $0) }.joined()
         let locationComponent = coordinate.map {
             String(format: "%.4f,%.4f", $0.latitude, $0.longitude)
         } ?? "no-gps"
-        return "vision-v4:"
+        let modelDigest = SHA256.hash(data: Data(cacheIdentifier.utf8))
+        let modelFingerprint = modelDigest.prefix(8).map { String(format: "%02x", $0) }.joined()
+        return "vision-v5:"
+            + modelFingerprint
+            + ":"
             + locationComponent
             + ":"
             + imageFingerprint

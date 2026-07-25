@@ -5,18 +5,22 @@ struct AppDependencies {
     let locationService: LocationService
     let placeFactService: PlaceFactProviding
     let cache: FactCaching
+    let llmSettings: LLMSettings
+    let modelCatalog: ModelCatalogProviding
 
     static func live() -> AppDependencies {
-        let configuration = LLMConfiguration.fromBundle()
+        let llmSettings = LLMSettings()
         let cache = CoreDataFactCache()
         return AppDependencies(
             locationService: LocationService(),
             placeFactService: PlaceFactService(
                 cache: cache,
                 geocoder: ReverseGeocodingService(),
-                llm: LLMClientFactory.make(configuration: configuration)
+                llm: ConfigurableLLMClient(settings: llmSettings)
             ),
-            cache: cache
+            cache: cache,
+            llmSettings: llmSettings,
+            modelCatalog: ModelCatalogService()
         )
     }
 }

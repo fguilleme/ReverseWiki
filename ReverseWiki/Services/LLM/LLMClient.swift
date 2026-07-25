@@ -3,6 +3,34 @@ import Foundation
 
 protocol LLMProviding {
     func fetchFact(imageData: Data, coordinate: CLLocationCoordinate2D?) async throws -> PlaceFact
+    func cacheIdentifier() async -> String
+}
+
+extension LLMProviding {
+    func cacheIdentifier() async -> String {
+        "legacy"
+    }
+}
+
+final class ConfigurableLLMClient: LLMProviding {
+    private let settings: LLMSettings
+    private let session: URLSession
+
+    init(settings: LLMSettings, session: URLSession = .shared) {
+        self.settings = settings
+        self.session = session
+    }
+
+    func fetchFact(imageData: Data, coordinate: CLLocationCoordinate2D?) async throws -> PlaceFact {
+        let configuration = await settings.configuration()
+        let client = LLMClientFactory.make(configuration: configuration, session: session)
+        return try await client.fetchFact(imageData: imageData, coordinate: coordinate)
+    }
+
+    func cacheIdentifier() async -> String {
+        let configuration = await settings.configuration()
+        return "\(configuration.provider.rawValue):\(configuration.model)"
+    }
 }
 
 enum LLMClientFactory {

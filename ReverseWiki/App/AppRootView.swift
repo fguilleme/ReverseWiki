@@ -10,8 +10,12 @@ struct AppRootView: View {
     @State private var captureViewModel: CaptureViewModel
     @State private var historyViewModel: HistoryViewModel
     @State private var intentRouter = AppIntentRouter.shared
+    private let llmSettings: LLMSettings
+    private let modelCatalog: ModelCatalogProviding
 
     init(dependencies: AppDependencies) {
+        llmSettings = dependencies.llmSettings
+        modelCatalog = dependencies.modelCatalog
         _captureViewModel = State(initialValue: CaptureViewModel(
             locationService: dependencies.locationService,
             placeFactService: dependencies.placeFactService
@@ -21,7 +25,11 @@ struct AppRootView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            CaptureView(viewModel: captureViewModel)
+            CaptureView(
+                viewModel: captureViewModel,
+                llmSettings: llmSettings,
+                modelCatalog: modelCatalog
+            )
                 .tabItem {
                     Label("Découvrir", systemImage: "camera")
                 }

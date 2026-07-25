@@ -2,6 +2,8 @@ import SwiftUI
 
 struct CaptureView: View {
     @State var viewModel: CaptureViewModel
+    let llmSettings: LLMSettings
+    let modelCatalog: ModelCatalogProviding
 
     var body: some View {
         NavigationStack {
@@ -57,37 +59,40 @@ struct CaptureView: View {
     }
 
     private var options: some View {
-        VStack(spacing: 28) {
-            Spacer()
-            Image(systemName: "building.columns.fill")
-                .font(.system(size: 72))
-                .foregroundStyle(.indigo)
-                .accessibilityHidden(true)
-            VStack(spacing: 8) {
-                Text("Regardez derrière le récit").font(.title2.bold())
-                Text("Photographiez un lieu pour découvrir une histoire vérifiée et sourcée.")
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
-            }
-            VStack(spacing: 12) {
-                Button {
-                    viewModel.isCameraPresented = true
-                } label: {
-                    Label("Prendre une photo", systemImage: "camera.fill").frame(maxWidth: .infinity)
+        ScrollView {
+            VStack(spacing: 24) {
+                Image(systemName: "building.columns.fill")
+                    .font(.system(size: 64))
+                    .foregroundStyle(.indigo)
+                    .accessibilityHidden(true)
+                VStack(spacing: 8) {
+                    Text("Regardez derrière le récit").font(.title2.bold())
+                    Text("Photographiez un lieu pour découvrir une histoire vérifiée et sourcée.")
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
 
-                Button {
-                    viewModel.isPhotoPickerPresented = true
-                } label: {
-                    Label("Importer une photo", systemImage: "photo.on.rectangle").frame(maxWidth: .infinity)
+                LLMSelectionView(settings: llmSettings, modelCatalog: modelCatalog)
+
+                VStack(spacing: 12) {
+                    Button {
+                        viewModel.isCameraPresented = true
+                    } label: {
+                        Label("Prendre une photo", systemImage: "camera.fill").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+
+                    Button {
+                        viewModel.isPhotoPickerPresented = true
+                    } label: {
+                        Label("Importer une photo", systemImage: "photo.on.rectangle").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
             }
-            Spacer()
+            .padding(24)
         }
-        .padding(24)
     }
 }

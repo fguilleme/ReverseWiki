@@ -14,8 +14,27 @@ struct ReverseWikiTests {
 
     @Test func coordinateKeyRoundsToFourDecimals() {
         let coordinate = CLLocationCoordinate2D(latitude: 48.8583701, longitude: 2.2944813)
-        let key = CoreDataFactCache.coordinateKey(for: coordinate, imageData: Data("cascade".utf8))
-        #expect(key.hasPrefix("vision-v4:48.8584,2.2945:"))
+        let key = CoreDataFactCache.coordinateKey(
+            for: coordinate,
+            imageData: Data("cascade".utf8),
+            cacheIdentifier: "gemini:gemini-flash"
+        )
+        #expect(key.contains(":48.8584,2.2945:"))
+    }
+
+    @Test func cacheKeyChangesWithModel() {
+        let image = Data("cascade".utf8)
+        let first = CoreDataFactCache.coordinateKey(
+            for: nil,
+            imageData: image,
+            cacheIdentifier: "gemini:gemini-flash"
+        )
+        let second = CoreDataFactCache.coordinateKey(
+            for: nil,
+            imageData: image,
+            cacheIdentifier: "openai:gpt-4.1-mini"
+        )
+        #expect(first != second)
     }
 
     @Test func placeFactDecodesStructuredContract() throws {

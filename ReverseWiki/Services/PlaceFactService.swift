@@ -16,12 +16,22 @@ final class PlaceFactService: PlaceFactProviding {
     }
 
     func analyze(for coordinate: CLLocationCoordinate2D?, imageData: Data) async throws -> PlaceAnalysis {
+        let cacheIdentifier = await llm.cacheIdentifier()
         let fact: PlaceFact
-        if let cached = try await cache.fact(for: coordinate, imageData: imageData) {
+        if let cached = try await cache.fact(
+            for: coordinate,
+            imageData: imageData,
+            cacheIdentifier: cacheIdentifier
+        ) {
             fact = cached
         } else {
             fact = try await llm.fetchFact(imageData: imageData, coordinate: coordinate)
-            try await cache.save(fact, for: coordinate, imageData: imageData)
+            try await cache.save(
+                fact,
+                for: coordinate,
+                imageData: imageData,
+                cacheIdentifier: cacheIdentifier
+            )
         }
 
         let resolvedCoordinate: CLLocationCoordinate2D?

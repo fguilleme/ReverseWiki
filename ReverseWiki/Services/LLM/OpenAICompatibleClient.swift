@@ -3,7 +3,49 @@ import Foundation
 
 final class OpenAICompatibleClient: LLMProviding {
     private struct Request: Encodable {
-        struct Message: Encodable { let role: String; let content: String }
+        struct Message: Encodable {
+            enum Content: Encodable {
+                case text(String)
+                case parts([Part])
+
+                func encode(to encoder: Encoder) throws {
+                    var container = encoder.singleValueContainer()
+                    switch self {
+                    case let .text(text):
+                        try container.encode(text)
+                    case let .parts(parts):
+                        try container.encode(parts)
+                    }
+                }
+            }
+
+            struct Part: Encodable {
+                struct ImageURL: Encodable {
+                    let url: String
+                }
+
+                let type: String
+                let text: String?
+                let imageURL: ImageURL?
+
+                enum CodingKeys: String, CodingKey {
+                    case type
+                    case text
+                    case imageURL = "image_url"
+                }
+
+                static func text(_ value: String) -> Part {
+                    Part(type: "text", text: value, imageURL: nil)
+                }
+
+                static func image(_ dataURL: String) -> Part {
+                    Part(type: "image_url", text: nil, imageURL: ImageURL(url: dataURL))
+                }
+            }
+
+            let role: String
+            let content: Content
+        }
         let model: String
         let messages: [Message]
         let temperature: Double
@@ -38,11 +80,18 @@ final class OpenAICompatibleClient: LLMProviding {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.setValue("Bearer \(key)", forHTTPHeaderField: "authorization")
+        let imageURL = "data:image/jpeg;base64,\(imageData.base64EncodedString())"
         request.httpBody = try JSONEncoder().encode(Request(
             model: configuration.model,
             messages: [
-                .init(role: "system", content: FactPrompt.system),
-                .init(role: "user", content: FactPrompt.user(coordinate: coordinate))
+                .init(role: "system", content: .text(FactPrompt.system)),
+                .init(
+                    role: "user",
+                    content: .parts([
+                        .text(FactPrompt.user(coordinate: coordinate)),
+                        .image(imageURL)
+                    ])
+                )
             ],
             temperature: 0.2
         ))

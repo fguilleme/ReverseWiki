@@ -1,12 +1,36 @@
 import Foundation
 
-enum LLMProvider: String, Sendable {
+enum LLMProvider: String, CaseIterable, Identifiable, Sendable {
     case anthropic
     case openAI = "openai"
     case gemini
     case kimi
     case openRouter = "openrouter"
     case custom
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .anthropic: "Anthropic"
+        case .openAI: "OpenAI"
+        case .gemini: "Gemini"
+        case .kimi: "Kimi"
+        case .openRouter: "OpenRouter"
+        case .custom: "Compatible OpenAI"
+        }
+    }
+
+    var keyCreationURL: URL? {
+        switch self {
+        case .anthropic: URL(string: "https://console.anthropic.com/settings/keys")
+        case .openAI: URL(string: "https://platform.openai.com/api-keys")
+        case .gemini: URL(string: "https://aistudio.google.com/app/apikey")
+        case .kimi: URL(string: "https://platform.moonshot.ai/console/api-keys")
+        case .openRouter: URL(string: "https://openrouter.ai/settings/keys")
+        case .custom: nil
+        }
+    }
 }
 
 struct LLMConfiguration: Sendable {
@@ -33,7 +57,7 @@ struct LLMConfiguration: Sendable {
     }
 }
 
-private extension LLMProvider {
+extension LLMProvider {
     var defaultModel: String {
         switch self {
         case .anthropic: "claude-sonnet-4-5"
