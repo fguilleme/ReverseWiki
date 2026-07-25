@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct ReverseWikiApp: App {
+    private let dependencies = AppDependencies.live()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppRootView(dependencies: dependencies)
         }
     }
 }

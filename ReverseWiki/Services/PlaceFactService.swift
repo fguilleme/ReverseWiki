@@ -1,0 +1,35 @@
+import CoreLocation
+
+protocol PlaceFactProviding {
+    func analyze(for coordinate: CLLocationCoordinate2D?, imageData: Data) async throws -> PlaceAnalysis
+}
+
+final class PlaceFactService: PlaceFactProviding {
+    private let cache: FactCaching
+    private let geocoder: ReverseGeocoding
+    private let llm: LLMProviding
+
+    init(cache: FactCaching, geocoder: ReverseGeocoding, llm: LLMProviding) {
+        self.cache = cache
+        self.geocoder = geocoder
+        self.llm = llm
+    }
+
+    func analyze(for coordinate: CLLocationCoordinate2D?, imageData: Data) async throws -> PlaceAnalysis {
+        let fact: PlaceFact
+        if let cached = try await cache.fact(for: coordinate, imageData: imageData) {
+            fact = cached
+        } else {
+            fact = try await llm.fetchFact(imageData: imageData, coordinate: coordinate)
+            try await cache.save(fact, for: coordinate, imageData: imageData)
+        }
+
+        let resolvedCoordinate: CLLocationCoordinate2D?
+        if let identifiedCoordinate = fact.identifiedCoordinate {
+            resolvedCoordinate = identifiedCoordinate
+        } else {
+            resolvedCoordinate = try? await geocoder.coordinate(for: fact.lieu)
+        }
+        return PlaceAnalysis(fact: fact, coordinate: resolvedCoordinate)
+    }
+}

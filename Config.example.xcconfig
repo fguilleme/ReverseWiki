@@ -1,0 +1,7 @@
+// Copy to Config.xcconfig. The copied file is excluded from Git.
+// Values: gemini, anthropic, openai, kimi, openrouter, custom
+LLM_PROVIDER = gemini
+LLM_API_KEY = replace-me
+LLM_MODEL = gemini-3.6-flash
+// Required only for "custom"; optional override for built-in providers.
+LLM_ENDPOINT =
