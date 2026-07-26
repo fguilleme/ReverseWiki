@@ -4,6 +4,7 @@ struct CaptureView: View {
     @State var viewModel: CaptureViewModel
     let llmSettings: LLMSettings
     let modelCatalog: ModelCatalogProviding
+    let onShowHelp: () -> Void
 
     var body: some View {
         NavigationStack {
@@ -39,6 +40,11 @@ struct CaptureView: View {
                         Button(action: viewModel.reset) {
                             Label("Accueil", systemImage: "chevron.left")
                         }
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: onShowHelp) {
+                        Label("Aide", systemImage: "questionmark.circle")
                     }
                 }
             }

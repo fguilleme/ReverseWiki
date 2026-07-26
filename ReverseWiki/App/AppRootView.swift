@@ -6,10 +6,19 @@ enum AppTab: Hashable {
 }
 
 struct AppRootView: View {
+    private enum HelpPresentation: String, Identifiable {
+        case firstLaunch
+        case manual
+
+        var id: String { rawValue }
+    }
+
+    @AppStorage("hasCompletedInitialHelp") private var hasCompletedInitialHelp = false
     @State private var selectedTab: AppTab = .capture
     @State private var captureViewModel: CaptureViewModel
     @State private var historyViewModel: HistoryViewModel
     @State private var intentRouter = AppIntentRouter.shared
+    @State private var helpPresentation: HelpPresentation?
     private let llmSettings: LLMSettings
     private let modelCatalog: ModelCatalogProviding
 
@@ -28,7 +37,10 @@ struct AppRootView: View {
             CaptureView(
                 viewModel: captureViewModel,
                 llmSettings: llmSettings,
-                modelCatalog: modelCatalog
+                modelCatalog: modelCatalog,
+                onShowHelp: {
+                    helpPresentation = .manual
+                }
             )
                 .tabItem {
                     Label("Découvrir", systemImage: "camera")
@@ -42,7 +54,11 @@ struct AppRootView: View {
                 .tag(AppTab.history)
         }
         .task {
-            handlePendingIntent()
+            if hasCompletedInitialHelp {
+                handlePendingIntent()
+            } else {
+                helpPresentation = .firstLaunch
+            }
         }
         .onChange(of: intentRouter.request?.id) {
             handlePendingIntent()
@@ -51,6 +67,15 @@ struct AppRootView: View {
             guard selectedTab == .history else { return }
             Task {
                 await historyViewModel.load()
+            }
+        }
+        .fullScreenCover(item: $helpPresentation) { presentation in
+            HelpView(isFirstLaunch: presentation == .firstLaunch) {
+                if presentation == .firstLaunch {
+                    hasCompletedInitialHelp = true
+                }
+                helpPresentation = nil
+                handlePendingIntent()
             }
         }
     }
