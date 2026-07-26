@@ -1,0 +1,2 @@
+"NSCameraUsageDescription" = "Reverse Wiki uses the camera to identify the photographed place.";
+"NSLocationWhenInUseUsageDescription" = "Reverse Wiki uses your location when the photo is taken to help identify the place.";

@@ -21,7 +21,11 @@ struct ResultView: View {
                         .frame(height: 280)
                         .clipShape(RoundedRectangle(cornerRadius: 24))
                         .shadow(radius: 12, y: 8)
-                        .accessibilityLabel("Photo analysée de \(result.fact.lieu)")
+                        .accessibilityLabel(Text(String(
+                            format: String(localized: "Photo analysée de %@"),
+                            locale: .current,
+                            result.fact.lieu
+                        )))
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
@@ -44,7 +48,11 @@ struct ResultView: View {
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityLabel("Modèle utilisé : \(model)")
+                        .accessibilityLabel(Text(String(
+                            format: String(localized: "Modèle utilisé : %@"),
+                            locale: .current,
+                            model
+                        )))
                 }
 
                 if let coordinate = result.coordinate {

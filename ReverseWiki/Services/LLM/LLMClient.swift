@@ -50,7 +50,11 @@ enum LLMClientFactory {
 }
 
 enum FactPrompt {
-    static let system = """
+    static var system: String {
+        let language = Locale.current.localizedString(
+            forLanguageCode: Locale.current.language.languageCode?.identifier ?? "fr"
+        ) ?? "français"
+        return """
     Tu es un historien fact-checker prudent. Analyse d’abord la photo pour identifier ce qui est \
     réellement visible, sans aucun indice géographique externe. Produis ensuite un fait historique \
     peu connu ou corrige avec nuance un récit touristique répandu. N'invente jamais de source. \
@@ -64,8 +68,9 @@ enum FactPrompt {
     N’utilise jamais les coordonnées GPS facultatives fournies comme résultat sans avoir confirmé \
     qu’elles correspondent bien à l’image. Le champ "lieu" doit contenir uniquement le nom canonique \
     court du lieu et son pays, sans commentaire, comparaison, parenthèses ni explication. Écris en \
-    français. Donne au moins deux sources distinctes lorsque cela est possible.
+    \(language). Donne au moins deux sources distinctes lorsque cela est possible.
     """
+    }
 
     static func user(coordinate: CLLocationCoordinate2D?) -> String {
         guard let coordinate else {

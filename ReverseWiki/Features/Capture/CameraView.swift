@@ -64,7 +64,7 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
         let button = UIButton(configuration: configuration)
         button.addTarget(self, action: #selector(capture), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.accessibilityLabel = "Prendre la photo"
+        button.accessibilityLabel = String(localized: "Prendre la photo")
         view.addSubview(button)
         NSLayoutConstraint.activate([
             button.centerXAnchor.constraint(equalTo: view.centerXAnchor),

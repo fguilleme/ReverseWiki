@@ -118,7 +118,7 @@ enum HTTPValidator {
             let envelope = try? JSONDecoder().decode(ErrorEnvelope.self, from: data)
             throw AppError.server(
                 statusCode: http.statusCode,
-                message: envelope?.error?.message ?? "Réponse inconnue"
+                message: envelope?.error?.message ?? String(localized: "Réponse inconnue")
             )
         }
         return data

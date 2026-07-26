@@ -77,7 +77,7 @@ final class LLMSettings {
         let key = apiKey(for: requestedProvider)
         guard !key.isEmpty else {
             availableModels = []
-            modelLoadingError = "Ajoutez une clé API pour charger les modèles."
+            modelLoadingError = String(localized: "Ajoutez une clé API pour charger les modèles.")
             return
         }
 
@@ -92,7 +92,7 @@ final class LLMSettings {
             if models.isEmpty {
                 selectedModel = ""
                 defaults.removeObject(forKey: PreferenceKey.model(requestedProvider))
-                modelLoadingError = "Aucun modèle compatible texte + image n’est disponible."
+                modelLoadingError = String(localized: "Aucun modèle compatible texte + image n’est disponible.")
             } else if !models.contains(where: { $0.id == selectedModel }), let first = models.first {
                 selectedModel = first.id
             }

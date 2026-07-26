@@ -54,7 +54,9 @@ struct LLMSelectionView: View {
                 } else {
                     Menu {
                         if settings.availableModels.isEmpty {
-                            Text(settings.isLoadingModels ? "Chargement…" : "Aucun modèle chargé")
+                            Text(settings.isLoadingModels
+                                 ? String(localized: "Chargement…")
+                                 : String(localized: "Aucun modèle chargé"))
                         } else {
                             ForEach(settings.availableModels) { model in
                                 Button {
@@ -93,7 +95,7 @@ struct LLMSelectionView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Modèle \(selectedModelName). Déplier les réglages")
+                .accessibilityLabel(Text(expandAccessibilityLabel))
             }
         }
         .padding(16)
@@ -142,7 +144,7 @@ struct LLMSelectionView: View {
         }
     }
 
-    private func selectionRow(title: String, value: String) -> some View {
+    private func selectionRow(title: LocalizedStringKey, value: String) -> some View {
         HStack {
             Text(title)
                 .foregroundStyle(.primary)
@@ -165,9 +167,19 @@ struct LLMSelectionView: View {
     }
 
     private var selectedModelName: String {
-        guard !settings.selectedModel.isEmpty else { return "Choisir un modèle" }
+        guard !settings.selectedModel.isEmpty else {
+            return String(localized: "Choisir un modèle")
+        }
         return settings.availableModels.first(where: { $0.id == settings.selectedModel })?.name
             ?? settings.selectedModel
+    }
+
+    private var expandAccessibilityLabel: String {
+        String(
+            format: String(localized: "Modèle %@. Déplier les réglages"),
+            locale: .current,
+            selectedModelName
+        )
     }
 }
 

@@ -11,12 +11,15 @@ final class ReverseGeocodingService: ReverseGeocoding {
     func place(for coordinate: CLLocationCoordinate2D) async throws -> CapturedPlace {
         let placemarks = try await geocoder.reverseGeocodeLocation(
             CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude),
-            preferredLocale: Locale(identifier: "fr_FR")
+            preferredLocale: .current
         )
         guard let placemark = placemarks.first else { throw AppError.geocodingFailed }
         return CapturedPlace(
             coordinate: coordinate,
-            name: placemark.name ?? placemark.areasOfInterest?.first ?? placemark.locality ?? "Lieu inconnu",
+            name: placemark.name
+                ?? placemark.areasOfInterest?.first
+                ?? placemark.locality
+                ?? String(localized: "Lieu inconnu"),
             locality: placemark.locality,
             country: placemark.country
         )
