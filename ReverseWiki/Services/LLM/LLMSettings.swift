@@ -89,7 +89,11 @@ final class LLMSettings {
             let models = try await catalog.models(for: requestedProvider, apiKey: key)
             guard provider == requestedProvider else { return }
             availableModels = models
-            if !models.contains(where: { $0.id == selectedModel }), let first = models.first {
+            if models.isEmpty {
+                selectedModel = ""
+                defaults.removeObject(forKey: PreferenceKey.model(requestedProvider))
+                modelLoadingError = "Aucun modèle compatible texte + image n’est disponible."
+            } else if !models.contains(where: { $0.id == selectedModel }), let first = models.first {
                 selectedModel = first.id
             }
         } catch {

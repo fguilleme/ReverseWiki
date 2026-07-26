@@ -37,6 +37,33 @@ struct ReverseWikiTests {
         #expect(first != second)
     }
 
+    @Test func modelCatalogFiltersTextOnlyModels() {
+        #expect(ModelCatalogService.supportsImageInput(
+            modelID: "gpt-4.1-mini",
+            provider: .openAI
+        ))
+        #expect(!ModelCatalogService.supportsImageInput(
+            modelID: "gpt-3.5-turbo",
+            provider: .openAI
+        ))
+        #expect(ModelCatalogService.supportsImageInput(
+            modelID: "kimi-k2.5",
+            provider: .kimi
+        ))
+        #expect(!ModelCatalogService.supportsImageInput(
+            modelID: "kimi-k2",
+            provider: .kimi
+        ))
+        #expect(!ModelCatalogService.supportsImageInput(
+            modelID: "gemini-2.5-flash-preview-tts",
+            provider: .gemini
+        ))
+        #expect(!ModelCatalogService.supportsImageInput(
+            modelID: "gemini-3-pro-image-preview",
+            provider: .gemini
+        ))
+    }
+
     @Test func placeFactDecodesStructuredContract() throws {
         let json = """
         {"lieu":"Tour Eiffel","fait_officiel":"Un symbole.","fait_verifie":"Elle devait être temporaire.","sources":["https://example.org"],"latitude":48.8584,"longitude":2.2945}
