@@ -42,6 +42,10 @@
 "La carte est masquée plutôt que d’afficher une position approximative." = "不正確な位置を表示しないため、地図を非表示にしています。";
 "Sources" = "出典";
 "Partager la carte" = "カードを共有";
+"Partager la carte postale" = "ポストカードを共有";
+"Partager le document PDF" = "PDF書類を共有";
+"Fait vérifié" = "検証済みの事実";
+"Carte" = "地図";
 "Analyser un autre lieu" = "別の場所を解析";
 "Export impossible" = "書き出しに失敗しました";
 "Photo analysée de %@" = "%@ の解析済み写真";

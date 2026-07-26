@@ -42,6 +42,10 @@
 "La carte est masquée plutôt que d’afficher une position approximative." = "O mapa fica oculto em vez de mostrar uma localização aproximada.";
 "Sources" = "Fontes";
 "Partager la carte" = "Compartilhar cartão";
+"Partager la carte postale" = "Compartilhar cartão-postal";
+"Partager le document PDF" = "Compartilhar documento PDF";
+"Fait vérifié" = "Fato verificado";
+"Carte" = "Mapa";
 "Analyser un autre lieu" = "Analisar outro lugar";
 "Export impossible" = "Falha na exportação";
 "Photo analysée de %@" = "Foto analisada de %@";

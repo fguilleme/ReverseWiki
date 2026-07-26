@@ -33,7 +33,8 @@ struct CaptureView: View {
                     }
                 }
             }
-            .navigationTitle("Reverse Wiki")
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if viewModel.canReturnHome {
                     ToolbarItem(placement: .topBarLeading) {
@@ -67,6 +68,9 @@ struct CaptureView: View {
     private var options: some View {
         ScrollView {
             VStack(spacing: 24) {
+                Text("Reverse Wiki")
+                    .font(.largeTitle.bold())
+                    .frame(maxWidth: .infinity)
                 Image(systemName: "building.columns.fill")
                     .font(.system(size: 64))
                     .foregroundStyle(.indigo)

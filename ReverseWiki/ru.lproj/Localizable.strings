@@ -42,6 +42,10 @@
 "La carte est masquée plutôt que d’afficher une position approximative." = "Карта скрыта, чтобы не показывать приблизительное местоположение.";
 "Sources" = "Источники";
 "Partager la carte" = "Поделиться карточкой";
+"Partager la carte postale" = "Поделиться открыткой";
+"Partager le document PDF" = "Поделиться PDF-документом";
+"Fait vérifié" = "Проверенный факт";
+"Carte" = "Карта";
 "Analyser un autre lieu" = "Проанализировать другое место";
 "Export impossible" = "Ошибка экспорта";
 "Photo analysée de %@" = "Проанализированное фото: %@";

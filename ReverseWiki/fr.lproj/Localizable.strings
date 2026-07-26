@@ -42,6 +42,10 @@
 "La carte est masquée plutôt que d’afficher une position approximative." = "La carte est masquée plutôt que d’afficher une position approximative.";
 "Sources" = "Sources";
 "Partager la carte" = "Partager la carte";
+"Partager la carte postale" = "Partager la carte postale";
+"Partager le document PDF" = "Partager le document PDF";
+"Fait vérifié" = "Fait vérifié";
+"Carte" = "Carte";
 "Analyser un autre lieu" = "Analyser un autre lieu";
 "Export impossible" = "Export impossible";
 "Photo analysée de %@" = "Photo analysée de %@";

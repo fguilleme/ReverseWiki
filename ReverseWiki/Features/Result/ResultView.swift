@@ -5,8 +5,9 @@ struct ResultView: View {
     let result: CaptureResult
     let onRestart: () -> Void
     var showsRestart = true
-    @State private var shareItem: ShareImage?
+    @State private var shareItem: SharePayload?
     @State private var exportError: String?
+    @State private var isExportingPDF = false
 
     private var uiImage: UIImage? { UIImage(data: result.imageData) }
 
@@ -84,20 +85,41 @@ struct ResultView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Button {
-                    export()
+                    exportPostcard()
                 } label: {
-                    Label("Partager la carte", systemImage: "square.and.arrow.up")
+                    Label("Partager la carte postale", systemImage: "rectangle.on.rectangle")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
+                Button {
+                    exportPDF()
+                } label: {
+                    if isExportingPDF {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        Label("Partager le document PDF", systemImage: "doc.richtext")
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .disabled(isExportingPDF)
                 if showsRestart {
                     Button("Analyser un autre lieu", action: onRestart)
                 }
             }
             .padding()
         }
-        .sheet(item: $shareItem) { ActivityView(items: [$0.image]) }
+        .sheet(item: $shareItem) { payload in
+            ActivityView(items: payload.items)
+                .onDisappear {
+                    if let url = payload.temporaryURL {
+                        try? FileManager.default.removeItem(at: url)
+                    }
+                }
+        }
         .alert("Export impossible", isPresented: Binding(
             get: { exportError != nil },
             set: { if !$0 { exportError = nil } }
@@ -109,7 +131,7 @@ struct ResultView: View {
     }
 
     @MainActor
-    private func export() {
+    private func exportPostcard() {
         guard let uiImage else {
             exportError = AppError.exportFailed.localizedDescription
             return
@@ -123,13 +145,28 @@ struct ResultView: View {
             exportError = AppError.exportFailed.localizedDescription
             return
         }
-        shareItem = ShareImage(image: image)
+        shareItem = SharePayload(items: [image])
     }
+
+    private func exportPDF() {
+        isExportingPDF = true
+        Task {
+            defer { isExportingPDF = false }
+            do {
+                let url = try await PDFExportService.makePDF(for: result)
+                shareItem = SharePayload(items: [url], temporaryURL: url)
+            } catch {
+                exportError = error.localizedDescription
+            }
+        }
+    }
+
 }
 
-private struct ShareImage: Identifiable {
+private struct SharePayload: Identifiable {
     let id = UUID()
-    let image: UIImage
+    let items: [Any]
+    var temporaryURL: URL? = nil
 }
 
 private struct ActivityView: UIViewControllerRepresentable {

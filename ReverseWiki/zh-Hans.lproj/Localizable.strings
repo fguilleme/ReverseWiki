@@ -42,6 +42,10 @@
 "La carte est masquée plutôt que d’afficher une position approximative." = "地图已隐藏，以免显示不准确的位置。";
 "Sources" = "来源";
 "Partager la carte" = "分享卡片";
+"Partager la carte postale" = "分享明信片";
+"Partager le document PDF" = "分享 PDF 文档";
+"Fait vérifié" = "已核实的事实";
+"Carte" = "地图";
 "Analyser un autre lieu" = "分析其他地点";
 "Export impossible" = "导出失败";
 "Photo analysée de %@" = "%@ 的已分析照片";

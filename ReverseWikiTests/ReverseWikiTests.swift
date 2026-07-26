@@ -6,8 +6,10 @@
 //
 
 import CoreLocation
+import CoreGraphics
 import Foundation
 import Testing
+import UIKit
 @testable import ReverseWiki
 
 struct ReverseWikiTests {
@@ -79,6 +81,31 @@ struct ReverseWikiTests {
             modelIdentifier: "gemini:gemini-3.6-flash"
         )
         #expect(result.modelDisplayName == "Gemini · gemini-3.6-flash")
+    }
+
+    @Test @MainActor func pdfExportCreatesPaginatedDocument() async throws {
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 800, height: 600)).image { context in
+            UIColor.systemIndigo.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 800, height: 600))
+        }
+        let result = CaptureResult(
+            imageData: try #require(image.jpegData(compressionQuality: 0.9)),
+            coordinate: nil,
+            fact: PlaceFact(
+                lieu: "Tour de test",
+                faitOfficiel: String(repeating: "Récit complet. ", count: 80),
+                faitVerifie: String(repeating: "Fait vérifié. ", count: 80),
+                sources: ["https://example.org/source"],
+                latitude: nil,
+                longitude: nil
+            ),
+            modelIdentifier: "gemini:gemini-3.6-flash"
+        )
+
+        let url = try await PDFExportService.makePDF(for: result)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let document = try #require(CGPDFDocument(url as CFURL))
+        #expect(document.numberOfPages >= 2)
     }
 
     @Test func placeFactDecodesStructuredContract() throws {

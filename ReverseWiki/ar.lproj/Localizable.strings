@@ -42,6 +42,10 @@
 "La carte est masquée plutôt que d’afficher une position approximative." = "تم إخفاء الخريطة بدلًا من عرض موقع تقريبي.";
 "Sources" = "المصادر";
 "Partager la carte" = "مشاركة البطاقة";
+"Partager la carte postale" = "مشاركة البطاقة البريدية";
+"Partager le document PDF" = "مشاركة مستند PDF";
+"Fait vérifié" = "حقيقة موثقة";
+"Carte" = "الخريطة";
 "Analyser un autre lieu" = "تحليل مكان آخر";
 "Export impossible" = "فشل التصدير";
 "Photo analysée de %@" = "صورة محللة لـ %@";
