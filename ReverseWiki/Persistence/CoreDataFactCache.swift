@@ -28,6 +28,7 @@ final class CoreDataFactCache: FactCaching {
         static let payload = "payload"
         static let imageData = "imageData"
         static let updatedAt = "updatedAt"
+        static let modelIdentifier = "modelIdentifier"
     }
 
     private let container: NSPersistentContainer
@@ -97,6 +98,7 @@ final class CoreDataFactCache: FactCaching {
             object.setValue(payload, forKey: Field.payload)
             object.setValue(imageData, forKey: Field.imageData)
             object.setValue(Date(), forKey: Field.updatedAt)
+            object.setValue(cacheIdentifier, forKey: Field.modelIdentifier)
             try context.save()
         }
     }
@@ -126,7 +128,8 @@ final class CoreDataFactCache: FactCaching {
                     imageData: imageData,
                     date: date,
                     fact: fact,
-                    coordinate: coordinate
+                    coordinate: coordinate,
+                    modelIdentifier: object.value(forKey: Field.modelIdentifier) as? String
                 )
             }
         }
@@ -188,7 +191,8 @@ final class CoreDataFactCache: FactCaching {
             attribute(Field.longitude, .doubleAttributeType),
             attribute(Field.payload, .binaryDataAttributeType),
             attribute(Field.imageData, .binaryDataAttributeType, optional: true),
-            attribute(Field.updatedAt, .dateAttributeType)
+            attribute(Field.updatedAt, .dateAttributeType),
+            attribute(Field.modelIdentifier, .stringAttributeType, optional: true)
         ]
         entity.uniquenessConstraints = [[Field.coordinateKey]]
         entity.indexes = [NSFetchIndexDescription(

@@ -40,6 +40,10 @@ final class PlaceFactService: PlaceFactProviding {
         } else {
             resolvedCoordinate = try? await geocoder.coordinate(for: fact.lieu)
         }
-        return PlaceAnalysis(fact: fact, coordinate: resolvedCoordinate)
+        return PlaceAnalysis(
+            fact: fact,
+            coordinate: resolvedCoordinate,
+            modelIdentifier: cacheIdentifier
+        )
     }
 }

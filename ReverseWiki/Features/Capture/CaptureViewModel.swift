@@ -68,7 +68,8 @@ final class CaptureViewModel {
             state = .result(CaptureResult(
                 imageData: imageData,
                 coordinate: analysis.coordinate,
-                fact: analysis.fact
+                fact: analysis.fact,
+                modelIdentifier: analysis.modelIdentifier
             ))
         } catch is CancellationError {
             state = .ready

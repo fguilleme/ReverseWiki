@@ -40,11 +40,21 @@ struct CaptureResult: Identifiable {
     let imageData: Data
     let coordinate: CLLocationCoordinate2D?
     let fact: PlaceFact
+    let modelIdentifier: String?
+
+    var modelDisplayName: String? {
+        guard let modelIdentifier, !modelIdentifier.isEmpty else { return nil }
+        let components = modelIdentifier.split(separator: ":", maxSplits: 1).map(String.init)
+        guard components.count == 2 else { return modelIdentifier }
+        let providerName = LLMProvider(rawValue: components[0])?.displayName ?? components[0]
+        return "\(providerName) · \(components[1])"
+    }
 }
 
 struct PlaceAnalysis: Sendable {
     let fact: PlaceFact
     let coordinate: CLLocationCoordinate2D?
+    let modelIdentifier: String
 }
 
 struct HistoryEntry: Identifiable, Sendable {
@@ -53,8 +63,14 @@ struct HistoryEntry: Identifiable, Sendable {
     let date: Date
     let fact: PlaceFact
     let coordinate: CLLocationCoordinate2D?
+    let modelIdentifier: String?
 
     var captureResult: CaptureResult {
-        CaptureResult(imageData: imageData, coordinate: coordinate, fact: fact)
+        CaptureResult(
+            imageData: imageData,
+            coordinate: coordinate,
+            fact: fact,
+            modelIdentifier: modelIdentifier
+        )
     }
 }

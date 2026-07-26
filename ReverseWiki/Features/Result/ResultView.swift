@@ -39,6 +39,14 @@ struct ResultView: View {
                 .padding()
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
 
+                if let model = result.modelDisplayName {
+                    Label(model, systemImage: "sparkles")
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityLabel("Modèle utilisé : \(model)")
+                }
+
                 if let coordinate = result.coordinate {
                     Map(initialPosition: .region(MKCoordinateRegion(
                         center: coordinate,

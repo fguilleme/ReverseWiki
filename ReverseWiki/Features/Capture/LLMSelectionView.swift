@@ -5,69 +5,96 @@ struct LLMSelectionView: View {
     let modelCatalog: ModelCatalogProviding
 
     @State private var editedProvider: LLMProvider?
+    @State private var isExpanded = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Label("Intelligence artificielle", systemImage: "sparkles")
-                    .font(.headline)
-                Spacer()
-                Button {
-                    editedProvider = settings.provider
-                } label: {
-                    Image(systemName: "key")
-                }
-                .accessibilityLabel("Configurer la clé API")
-            }
-
-            Menu {
-                ForEach(LLMProvider.allCases.filter { $0 != .custom }) { provider in
+            if isExpanded {
+                HStack {
+                    Label("Intelligence artificielle", systemImage: "sparkles")
+                        .font(.headline)
+                    Spacer()
                     Button {
-                        settings.provider = provider
+                        editedProvider = settings.provider
                     } label: {
-                        if provider == settings.provider {
-                            Label(provider.displayName, systemImage: "checkmark")
-                        } else {
-                            Text(provider.displayName)
-                        }
+                        Image(systemName: "key")
                     }
+                    .accessibilityLabel("Configurer la clé API")
+                    Button {
+                        withAnimation(.snappy) {
+                            isExpanded = false
+                        }
+                    } label: {
+                        Image(systemName: "chevron.up")
+                    }
+                    .accessibilityLabel("Replier les réglages")
                 }
-            } label: {
-                selectionRow(title: "Fournisseur", value: settings.provider.displayName)
-            }
 
-            if settings.provider == .custom {
-                TextField("Identifiant du modèle", text: customModelBinding)
-                    .textFieldStyle(.roundedBorder)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-            } else {
                 Menu {
-                    if settings.availableModels.isEmpty {
-                        Text(settings.isLoadingModels ? "Chargement…" : "Aucun modèle chargé")
-                    } else {
-                        ForEach(settings.availableModels) { model in
-                            Button {
-                                settings.selectedModel = model.id
-                            } label: {
-                                if model.id == settings.selectedModel {
-                                    Label(model.name, systemImage: "checkmark")
-                                } else {
-                                    Text(model.name)
-                                }
+                    ForEach(LLMProvider.allCases.filter { $0 != .custom }) { provider in
+                        Button {
+                            settings.provider = provider
+                        } label: {
+                            if provider == settings.provider {
+                                Label(provider.displayName, systemImage: "checkmark")
+                            } else {
+                                Text(provider.displayName)
                             }
                         }
                     }
                 } label: {
-                    selectionRow(
-                        title: "Modèle",
-                        value: settings.selectedModel.isEmpty ? "Choisir" : settings.selectedModel
-                    )
+                    selectionRow(title: "Fournisseur", value: settings.provider.displayName)
                 }
-                .disabled(settings.isLoadingModels || settings.availableModels.isEmpty)
-            }
 
-            status
+                if settings.provider == .custom {
+                    TextField("Identifiant du modèle", text: customModelBinding)
+                        .textFieldStyle(.roundedBorder)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                } else {
+                    Menu {
+                        if settings.availableModels.isEmpty {
+                            Text(settings.isLoadingModels ? "Chargement…" : "Aucun modèle chargé")
+                        } else {
+                            ForEach(settings.availableModels) { model in
+                                Button {
+                                    settings.selectedModel = model.id
+                                } label: {
+                                    if model.id == settings.selectedModel {
+                                        Label(model.name, systemImage: "checkmark")
+                                    } else {
+                                        Text(model.name)
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        selectionRow(title: "Modèle", value: selectedModelName)
+                    }
+                    .disabled(settings.isLoadingModels || settings.availableModels.isEmpty)
+                }
+
+                status
+            } else {
+                Button {
+                    withAnimation(.snappy) {
+                        isExpanded = true
+                    }
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "sparkles")
+                        Text(selectedModelName)
+                            .lineLimit(1)
+                        Spacer()
+                        Image(systemName: "chevron.down")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Modèle \(selectedModelName). Déplier les réglages")
+            }
         }
         .padding(16)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
@@ -135,6 +162,12 @@ struct LLMSelectionView: View {
             get: { settings.selectedModel },
             set: { settings.selectedModel = $0 }
         )
+    }
+
+    private var selectedModelName: String {
+        guard !settings.selectedModel.isEmpty else { return "Choisir un modèle" }
+        return settings.availableModels.first(where: { $0.id == settings.selectedModel })?.name
+            ?? settings.selectedModel
     }
 }
 

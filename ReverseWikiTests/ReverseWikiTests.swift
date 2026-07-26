@@ -64,6 +64,23 @@ struct ReverseWikiTests {
         ))
     }
 
+    @Test func resultDisplaysProviderAndModel() {
+        let result = CaptureResult(
+            imageData: Data(),
+            coordinate: nil,
+            fact: PlaceFact(
+                lieu: "Lieu",
+                faitOfficiel: "Récit",
+                faitVerifie: "Fait",
+                sources: [],
+                latitude: nil,
+                longitude: nil
+            ),
+            modelIdentifier: "gemini:gemini-3.6-flash"
+        )
+        #expect(result.modelDisplayName == "Gemini · gemini-3.6-flash")
+    }
+
     @Test func placeFactDecodesStructuredContract() throws {
         let json = """
         {"lieu":"Tour Eiffel","fait_officiel":"Un symbole.","fait_verifie":"Elle devait être temporaire.","sources":["https://example.org"],"latitude":48.8584,"longitude":2.2945}
