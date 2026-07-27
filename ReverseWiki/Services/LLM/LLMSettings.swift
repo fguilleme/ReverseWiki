@@ -14,6 +14,9 @@ final class LLMSettings {
         static func model(_ provider: LLMProvider) -> String {
             "llm.selected-model.\(provider.rawValue)"
         }
+        static func temperature(_ provider: LLMProvider, model: String) -> String {
+            "llm.temperature.\(provider.rawValue).\(model)"
+        }
     }
 
     var provider: LLMProvider {
@@ -68,12 +71,28 @@ final class LLMSettings {
         try keychain.set(value, for: provider ?? self.provider)
     }
 
+    func temperature(for provider: LLMProvider, model: String) -> Double {
+        let key = PreferenceKey.temperature(provider, model: model)
+        guard defaults.object(forKey: key) != nil else {
+            return provider.requestTemperature
+        }
+        return LLMTemperature.normalized(defaults.double(forKey: key))
+    }
+
+    func saveTemperature(_ value: Double, for provider: LLMProvider, model: String) {
+        defaults.set(
+            LLMTemperature.normalized(value),
+            forKey: PreferenceKey.temperature(provider, model: model)
+        )
+    }
+
     func configuration() -> LLMConfiguration {
         LLMConfiguration(
             provider: provider,
             apiKey: apiKey(),
             model: selectedModel,
-            endpoint: provider.defaultEndpoint
+            endpoint: provider.defaultEndpoint,
+            temperature: temperature(for: provider, model: selectedModel)
         )
     }
 

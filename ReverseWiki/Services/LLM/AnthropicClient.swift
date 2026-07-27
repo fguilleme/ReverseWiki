@@ -6,6 +6,7 @@ final class AnthropicClient: LLMProviding {
         struct Message: Encodable { let role: String; let content: String }
         let model: String
         let maxTokens: Int
+        let temperature: Double
         let system: String
         let messages: [Message]
 
@@ -43,6 +44,7 @@ final class AnthropicClient: LLMProviding {
         request.httpBody = try JSONEncoder().encode(Request(
             model: configuration.model,
             maxTokens: 900,
+            temperature: configuration.temperature,
             system: FactPrompt.system,
             messages: [.init(role: "user", content: FactPrompt.user(coordinate: coordinate))]
         ))

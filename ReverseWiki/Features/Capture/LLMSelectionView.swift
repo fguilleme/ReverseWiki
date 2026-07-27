@@ -191,6 +191,7 @@ private struct LLMCredentialsView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var apiKey: String
+    @State private var temperature: Double
     @State private var errorMessage: String?
     @State private var isSaving = false
 
@@ -203,6 +204,10 @@ private struct LLMCredentialsView: View {
         self.settings = settings
         self.modelCatalog = modelCatalog
         _apiKey = State(initialValue: settings.apiKey(for: provider))
+        _temperature = State(initialValue: settings.temperature(
+            for: provider,
+            model: settings.selectedModel
+        ))
     }
 
     var body: some View {
@@ -225,6 +230,21 @@ private struct LLMCredentialsView: View {
                     Text("Clé API \(provider.displayName)")
                 } footer: {
                     Text("La clé est conservée dans le Trousseau de cet appareil.")
+                }
+
+                Section {
+                    Stepper(value: $temperature, in: 0...2, step: 0.1) {
+                        LabeledContent(
+                            "Température",
+                            value: temperature.formatted(
+                                .number.precision(.fractionLength(1))
+                            )
+                        )
+                    }
+                } header: {
+                    Text("Paramètres du modèle")
+                } footer: {
+                    Text("Certains modèles imposent une valeur précise, par exemple 1,0.")
                 }
 
                 if let errorMessage {
@@ -256,6 +276,11 @@ private struct LLMCredentialsView: View {
         isSaving = true
         do {
             try settings.saveAPIKey(apiKey, for: provider)
+            settings.saveTemperature(
+                temperature,
+                for: provider,
+                model: settings.selectedModel
+            )
             Task {
                 if settings.provider == provider {
                     await settings.refreshModels(using: modelCatalog)

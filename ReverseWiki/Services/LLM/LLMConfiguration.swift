@@ -1,5 +1,11 @@
 import Foundation
 
+enum LLMTemperature {
+    static func normalized(_ value: Double) -> Double {
+        (min(max(value, 0), 2) * 10).rounded() / 10
+    }
+}
+
 enum LLMProvider: String, CaseIterable, Identifiable, Sendable {
     case anthropic
     case openAI = "openai"
@@ -38,6 +44,7 @@ struct LLMConfiguration: Sendable {
     let apiKey: String?
     let model: String
     let endpoint: URL?
+    let temperature: Double
 
     static func fromBundle(_ bundle: Bundle = .main) -> LLMConfiguration {
         let configuredProvider = (bundle.object(forInfoDictionaryKey: "LLM_PROVIDER") as? String)?
@@ -47,12 +54,16 @@ struct LLMConfiguration: Sendable {
         let apiKey = bundle.object(forInfoDictionaryKey: "LLM_API_KEY") as? String
         let configuredModel = bundle.object(forInfoDictionaryKey: "LLM_MODEL") as? String
         let configuredEndpoint = bundle.object(forInfoDictionaryKey: "LLM_ENDPOINT") as? String
+        let configuredTemperature = bundle.object(forInfoDictionaryKey: "LLM_TEMPERATURE") as? Double
 
         return LLMConfiguration(
             provider: provider,
             apiKey: apiKey?.trimmingCharacters(in: .whitespacesAndNewlines),
             model: configuredModel.flatMap { $0.isEmpty ? nil : $0 } ?? provider.defaultModel,
-            endpoint: configuredEndpoint.flatMap(URL.init(string:)) ?? provider.defaultEndpoint
+            endpoint: configuredEndpoint.flatMap(URL.init(string:)) ?? provider.defaultEndpoint,
+            temperature: LLMTemperature.normalized(
+                configuredTemperature ?? provider.requestTemperature
+            )
         )
     }
 }

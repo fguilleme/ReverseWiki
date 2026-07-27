@@ -85,3 +85,6 @@
 "Quel modèle choisir ?" = "Какую модель выбрать?";
 "Gemini peut fonctionner gratuitement avec la clé partagée de l’app, mais le quota et les performances sont partagés entre les utilisateurs." = "Gemini может работать бесплатно с общим ключом приложения, но квота и производительность распределяются между пользователями.";
 "Pour une utilisation plus fiable, ajoutez votre propre clé Gemini gratuite. Vous pouvez aussi choisir des modèles payants comme Claude ou GPT." = "Для более надёжной работы добавьте собственный бесплатный ключ Gemini. Также можно выбрать платные модели, например Claude или GPT.";
+"Paramètres du modèle" = "Настройки модели";
+"Température" = "Температура";
+"Certains modèles imposent une valeur précise, par exemple 1,0." = "Некоторые модели требуют точного значения, например 1,0.";

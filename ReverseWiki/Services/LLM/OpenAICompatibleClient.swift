@@ -95,7 +95,7 @@ final class OpenAICompatibleClient: LLMProviding {
                     ])
                 )
             ],
-            temperature: configuration.provider.requestTemperature
+            temperature: configuration.temperature
         ))
 
         let data = try await HTTPValidator.data(for: request, session: session)

@@ -85,3 +85,6 @@
 "Quel modèle choisir ?" = "应该选择哪个模型？";
 "Gemini peut fonctionner gratuitement avec la clé partagée de l’app, mais le quota et les performances sont partagés entre les utilisateurs." = "Gemini 可使用应用的共享密钥免费运行，但配额和性能由所有用户共享。";
 "Pour une utilisation plus fiable, ajoutez votre propre clé Gemini gratuite. Vous pouvez aussi choisir des modèles payants comme Claude ou GPT." = "若要获得更可靠的体验，请添加自己的免费 Gemini 密钥。你也可以选择 Claude 或 GPT 等付费模型。";
+"Paramètres du modèle" = "模型设置";
+"Température" = "温度";
+"Certains modèles imposent une valeur précise, par exemple 1,0." = "部分模型要求使用特定值，例如 1.0。";

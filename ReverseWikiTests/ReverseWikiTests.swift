@@ -93,6 +93,12 @@ struct ReverseWikiTests {
         #expect(LLMProvider.openAI.analysisTimeout == 90)
     }
 
+    @Test func temperatureIsNormalizedForAPIsRequiringExactValues() {
+        #expect(LLMTemperature.normalized(0.999999999999) == 1)
+        #expect(LLMTemperature.normalized(1.000000000001) == 1)
+        #expect(LLMTemperature.normalized(0.24) == 0.2)
+    }
+
     @Test func resultDisplaysProviderAndModel() {
         let result = CaptureResult(
             imageData: Data(),

@@ -81,7 +81,10 @@ final class GeminiClient: LLMProviding {
         request.httpBody = try JSONEncoder().encode(Request(
             systemInstruction: .init(parts: [.text(FactPrompt.system)]),
             contents: [.init(parts: parts)],
-            generationConfig: .init(temperature: 0.2, responseMimeType: "application/json")
+            generationConfig: .init(
+                temperature: configuration.temperature,
+                responseMimeType: "application/json"
+            )
         ))
 
         let data = try await HTTPValidator.data(for: request, session: session)

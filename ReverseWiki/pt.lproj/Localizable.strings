@@ -85,3 +85,6 @@
 "Quel modèle choisir ?" = "Qual modelo escolher?";
 "Gemini peut fonctionner gratuitement avec la clé partagée de l’app, mais le quota et les performances sont partagés entre les utilisateurs." = "O Gemini pode funcionar gratuitamente com a chave compartilhada do app, mas a cota e o desempenho são compartilhados entre os usuários.";
 "Pour une utilisation plus fiable, ajoutez votre propre clé Gemini gratuite. Vous pouvez aussi choisir des modèles payants comme Claude ou GPT." = "Para um uso mais confiável, adicione sua própria chave gratuita do Gemini. Você também pode escolher modelos pagos como Claude ou GPT.";
+"Paramètres du modèle" = "Definições do modelo";
+"Température" = "Temperatura";
+"Certains modèles imposent une valeur précise, par exemple 1,0." = "Alguns modelos exigem um valor específico, por exemplo 1,0.";
