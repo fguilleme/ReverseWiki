@@ -8,6 +8,8 @@ enum AppError: LocalizedError {
     case missingAPIKey(provider: String)
     case invalidConfiguration
     case invalidResponse
+    case invalidResponseDetail(String)
+    case noCompatibleModels(provider: String, received: Int, sample: [String])
     case server(statusCode: Int, message: String)
     case exportFailed
 
@@ -31,6 +33,20 @@ enum AppError: LocalizedError {
             String(localized: "La configuration du fournisseur IA est invalide.")
         case .invalidResponse:
             String(localized: "Le fournisseur IA a renvoyé une réponse inattendue.")
+        case let .invalidResponseDetail(detail):
+            String(
+                format: String(localized: "Le fournisseur IA a renvoyé une réponse inattendue : %@"),
+                locale: .current,
+                detail
+            )
+        case let .noCompatibleModels(provider, received, sample):
+            String(
+                format: String(localized: "%@ a renvoyé %lld modèle(s), mais aucun n’a été reconnu comme compatible texte + image. Modèles reçus : %@"),
+                locale: .current,
+                provider,
+                Int64(received),
+                sample.isEmpty ? "—" : sample.joined(separator: ", ")
+            )
         case let .server(statusCode, message):
             String(
                 format: String(localized: "Erreur API %lld : %@"),

@@ -56,6 +56,22 @@ struct ReverseWikiTests {
             modelID: "kimi-k2",
             provider: .kimi
         ))
+        #expect(ModelCatalogService.supportsImageInput(
+            modelID: "kimi-k2.6",
+            provider: .kimi
+        ))
+        #expect(ModelCatalogService.supportsImageInput(
+            modelID: "kimi-k3",
+            provider: .kimi
+        ))
+        #expect(!ModelCatalogService.supportsImageInput(
+            modelID: "kimi-k2.7-code",
+            provider: .kimi
+        ))
+        #expect(!ModelCatalogService.supportsImageInput(
+            modelID: "kimi-k2.7-code-highspeed",
+            provider: .kimi
+        ))
         #expect(!ModelCatalogService.supportsImageInput(
             modelID: "gemini-2.5-flash-preview-tts",
             provider: .gemini
@@ -64,6 +80,17 @@ struct ReverseWikiTests {
             modelID: "gemini-3-pro-image-preview",
             provider: .gemini
         ))
+    }
+
+    @Test func kimiUsesRequiredTemperature() {
+        #expect(LLMProvider.kimi.requestTemperature == 1)
+        #expect(LLMProvider.openAI.requestTemperature == 0.2)
+        #expect(LLMProvider.openRouter.requestTemperature == 0.2)
+    }
+
+    @Test func kimiAllowsLongMultimodalAnalysis() {
+        #expect(LLMProvider.kimi.analysisTimeout == 240)
+        #expect(LLMProvider.openAI.analysisTimeout == 90)
     }
 
     @Test func resultDisplaysProviderAndModel() {

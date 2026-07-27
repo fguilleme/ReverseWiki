@@ -71,6 +71,7 @@ final class GeminiClient: LLMProviding {
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
+        request.timeoutInterval = configuration.provider.analysisTimeout
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.setValue(key, forHTTPHeaderField: "x-goog-api-key")
         let parts: [Request.Content.Part] = [

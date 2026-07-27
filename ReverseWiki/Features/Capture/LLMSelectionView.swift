@@ -5,7 +5,7 @@ struct LLMSelectionView: View {
     let modelCatalog: ModelCatalogProviding
 
     @State private var editedProvider: LLMProvider?
-    @State private var isExpanded = false
+    @State private var isExpanded = AppStoreScreenshotMode.current == .settings
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -101,6 +101,7 @@ struct LLMSelectionView: View {
         .padding(16)
         .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18))
         .task(id: settings.provider) {
+            guard AppStoreScreenshotMode.current == nil else { return }
             await settings.refreshModels(using: modelCatalog)
         }
         .sheet(item: $editedProvider) { provider in

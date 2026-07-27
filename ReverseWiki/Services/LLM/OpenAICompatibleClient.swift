@@ -1,5 +1,6 @@
 import CoreLocation
 import Foundation
+import OSLog
 
 final class OpenAICompatibleClient: LLMProviding {
     private struct Request: Encodable {
@@ -78,6 +79,7 @@ final class OpenAICompatibleClient: LLMProviding {
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
+        request.timeoutInterval = configuration.provider.analysisTimeout
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.setValue("Bearer \(key)", forHTTPHeaderField: "authorization")
         let imageURL = "data:image/jpeg;base64,\(imageData.base64EncodedString())"
@@ -93,7 +95,7 @@ final class OpenAICompatibleClient: LLMProviding {
                     ])
                 )
             ],
-            temperature: 0.2
+            temperature: configuration.provider.requestTemperature
         ))
 
         let data = try await HTTPValidator.data(for: request, session: session)
@@ -106,19 +108,44 @@ final class OpenAICompatibleClient: LLMProviding {
 }
 
 enum HTTPValidator {
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "ReverseWiki",
+        category: "HTTP"
+    )
     private struct ErrorEnvelope: Decodable {
         struct Detail: Decodable { let message: String? }
         let error: Detail?
     }
 
     static func data(for request: URLRequest, session: URLSession) async throws -> Data {
-        let (data, response) = try await session.data(for: request)
+        let method = request.httpMethod ?? "GET"
+        let endpoint = request.url?.absoluteString ?? "invalid-url"
+        logger.info("Request started method=\(method, privacy: .public) url=\(endpoint, privacy: .public)")
+        let startedAt = ContinuousClock.now
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            logger.error(
+                "Transport failed url=\(endpoint, privacy: .public) error=\(String(describing: error), privacy: .public)"
+            )
+            throw error
+        }
         guard let http = response as? HTTPURLResponse else { throw AppError.invalidResponse }
+        let duration = startedAt.duration(to: .now)
+        logger.info(
+            "Response received url=\(endpoint, privacy: .public) status=\(http.statusCode) bytes=\(data.count) duration=\(String(describing: duration), privacy: .public)"
+        )
         guard (200..<300).contains(http.statusCode) else {
             let envelope = try? JSONDecoder().decode(ErrorEnvelope.self, from: data)
+            let message = envelope?.error?.message ?? String(decoding: data.prefix(1_000), as: UTF8.self)
+            logger.error(
+                "API rejected request url=\(endpoint, privacy: .public) status=\(http.statusCode) message=\(message, privacy: .private)"
+            )
             throw AppError.server(
                 statusCode: http.statusCode,
-                message: envelope?.error?.message ?? String(localized: "Réponse inconnue")
+                message: message.isEmpty ? String(localized: "Réponse inconnue") : message
             )
         }
         return data

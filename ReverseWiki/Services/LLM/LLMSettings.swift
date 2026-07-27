@@ -1,9 +1,14 @@
 import Foundation
 import Observation
+import OSLog
 
 @MainActor
 @Observable
 final class LLMSettings {
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "ReverseWiki",
+        category: "LLMSettings"
+    )
     private enum PreferenceKey {
         static let provider = "llm.selected-provider"
         static func model(_ provider: LLMProvider) -> String {
@@ -75,9 +80,13 @@ final class LLMSettings {
     func refreshModels(using catalog: ModelCatalogProviding) async {
         let requestedProvider = provider
         let key = apiKey(for: requestedProvider)
+        Self.logger.info(
+            "Refresh requested provider=\(requestedProvider.rawValue, privacy: .public), keyPresent=\(!key.isEmpty), selectedModel=\(self.selectedModel, privacy: .public)"
+        )
         guard !key.isEmpty else {
             availableModels = []
             modelLoadingError = String(localized: "Ajoutez une clé API pour charger les modèles.")
+            Self.logger.error("Refresh stopped: no key for provider=\(requestedProvider.rawValue, privacy: .public)")
             return
         }
 
@@ -93,14 +102,34 @@ final class LLMSettings {
                 selectedModel = ""
                 defaults.removeObject(forKey: PreferenceKey.model(requestedProvider))
                 modelLoadingError = String(localized: "Aucun modèle compatible texte + image n’est disponible.")
+                Self.logger.error(
+                    "Refresh completed with an empty compatible catalog for provider=\(requestedProvider.rawValue, privacy: .public)"
+                )
             } else if !models.contains(where: { $0.id == selectedModel }), let first = models.first {
                 selectedModel = first.id
             }
+            Self.logger.info(
+                "Refresh succeeded provider=\(requestedProvider.rawValue, privacy: .public), count=\(models.count), selectedModel=\(self.selectedModel, privacy: .public)"
+            )
         } catch {
             guard provider == requestedProvider else { return }
             availableModels = []
             modelLoadingError = error.localizedDescription
+            Self.logger.error(
+                "Refresh failed provider=\(requestedProvider.rawValue, privacy: .public), error=\(String(describing: error), privacy: .public)"
+            )
         }
+    }
+
+    func prepareAppStorePreview() {
+        provider = .gemini
+        availableModels = [
+            LLMModel(id: "gemini-2.5-flash", name: "Gemini 2.5 Flash"),
+            LLMModel(id: "gemini-2.5-pro", name: "Gemini 2.5 Pro")
+        ]
+        selectedModel = "gemini-2.5-flash"
+        modelLoadingError = nil
+        isLoadingModels = false
     }
 
     private func savedModel(for provider: LLMProvider) -> String {

@@ -12,8 +12,9 @@ struct ResultView: View {
     private var uiImage: UIImage? { UIImage(data: result.imageData) }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 20) {
                 if let uiImage {
                     Image(uiImage: uiImage)
                         .resizable()
@@ -66,6 +67,7 @@ struct ResultView: View {
                     .frame(height: 220)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     .accessibilityLabel("Carte du lieu identifié")
+                    .id("map")
                 } else {
                     ContentUnavailableView(
                         "Position non confirmée",
@@ -110,7 +112,15 @@ struct ResultView: View {
                     Button("Analyser un autre lieu", action: onRestart)
                 }
             }
-            .padding()
+                .padding()
+            }
+            .task {
+                guard AppStoreScreenshotMode.current == .map else { return }
+                try? await Task.sleep(for: .milliseconds(400))
+                withAnimation(.none) {
+                    proxy.scrollTo("map", anchor: .top)
+                }
+            }
         }
         .sheet(item: $shareItem) { payload in
             ActivityView(items: payload.items)

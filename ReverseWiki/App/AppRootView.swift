@@ -25,10 +25,18 @@ struct AppRootView: View {
     init(dependencies: AppDependencies) {
         llmSettings = dependencies.llmSettings
         modelCatalog = dependencies.modelCatalog
-        _captureViewModel = State(initialValue: CaptureViewModel(
+        if AppStoreScreenshotMode.current != nil {
+            llmSettings.prepareAppStorePreview()
+        }
+        let captureViewModel = CaptureViewModel(
             locationService: dependencies.locationService,
             placeFactService: dependencies.placeFactService
-        ))
+        )
+        if AppStoreScreenshotMode.usesFixture,
+           let result = AppStoreScreenshotMode.makeResult() {
+            captureViewModel.state = .result(result)
+        }
+        _captureViewModel = State(initialValue: captureViewModel)
         _historyViewModel = State(initialValue: HistoryViewModel(cache: dependencies.cache))
     }
 
@@ -54,6 +62,10 @@ struct AppRootView: View {
                 .tag(AppTab.history)
         }
         .task {
+            if AppStoreScreenshotMode.current == .help {
+                helpPresentation = .firstLaunch
+                return
+            }
             if hasCompletedInitialHelp {
                 handlePendingIntent()
             } else {

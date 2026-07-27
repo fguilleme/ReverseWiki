@@ -58,6 +58,20 @@ struct LLMConfiguration: Sendable {
 }
 
 extension LLMProvider {
+    var analysisTimeout: TimeInterval {
+        switch self {
+        case .kimi: 240
+        default: 90
+        }
+    }
+
+    var requestTemperature: Double {
+        switch self {
+        case .kimi: 1
+        default: 0.2
+        }
+    }
+
     var defaultModel: String {
         switch self {
         case .anthropic: "claude-sonnet-4-5"
