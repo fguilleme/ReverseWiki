@@ -12,15 +12,18 @@ struct ResultView: View {
     private var uiImage: UIImage? { UIImage(data: result.imageData) }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(spacing: 20) {
+        GeometryReader { geometry in
+            let horizontalPadding: CGFloat = geometry.size.width > geometry.size.height ? 24 : 16
+            let contentWidth = max(geometry.size.width - (horizontalPadding * 2), 1)
+
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 20) {
                 if let uiImage {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 280)
+                        .frame(width: contentWidth, height: 280)
                         .clipShape(RoundedRectangle(cornerRadius: 24))
                         .shadow(radius: 12, y: 8)
                         .accessibilityLabel(Text(String(
@@ -33,23 +36,26 @@ struct ResultView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(result.fact.lieu)
                         .font(.title.bold())
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(result.fact.faitVerifie)
                         .font(.title3.weight(.semibold))
+                        .fixedSize(horizontal: false, vertical: true)
                     Divider()
                     Text("Le récit courant")
                         .font(.headline)
                         .foregroundStyle(.secondary)
                     Text(result.fact.faitOfficiel)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
+                .frame(width: contentWidth, alignment: .leading)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
 
                 if let model = result.modelDisplayName {
                     Label(model, systemImage: "sparkles")
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(width: contentWidth, alignment: .leading)
                         .accessibilityLabel(Text(String(
                             format: String(localized: "Modèle utilisé : %@"),
                             locale: .current,
@@ -64,7 +70,7 @@ struct ResultView: View {
                     ))) {
                         Marker(result.fact.lieu, coordinate: coordinate)
                     }
-                    .frame(height: 220)
+                    .frame(width: contentWidth, height: 220)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                     .accessibilityLabel("Carte du lieu identifié")
                     .id("map")
@@ -74,23 +80,26 @@ struct ResultView: View {
                         systemImage: "map",
                         description: Text("La carte est masquée plutôt que d’afficher une position approximative.")
                     )
-                    .frame(height: 180)
+                    .frame(width: contentWidth, height: 180)
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
                     Label("Sources", systemImage: "checkmark.seal.fill").font(.headline)
                     ForEach(result.fact.sources, id: \.self) { source in
                         if let url = URL(string: source) {
-                            Link(source, destination: url).font(.footnote).lineLimit(2)
+                            Link(source, destination: url)
+                                .font(.footnote)
+                                .lineLimit(2)
+                                .truncationMode(.middle)
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(width: contentWidth, alignment: .leading)
                 Button {
                     exportPostcard()
                 } label: {
                     Label("Partager la carte postale", systemImage: "rectangle.on.rectangle")
-                        .frame(maxWidth: .infinity)
+                        .frame(width: contentWidth)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
@@ -99,10 +108,10 @@ struct ResultView: View {
                 } label: {
                     if isExportingPDF {
                         ProgressView()
-                            .frame(maxWidth: .infinity)
+                            .frame(width: contentWidth)
                     } else {
                         Label("Partager le document PDF", systemImage: "doc.richtext")
-                            .frame(maxWidth: .infinity)
+                            .frame(width: contentWidth)
                     }
                 }
                 .buttonStyle(.bordered)
@@ -111,14 +120,17 @@ struct ResultView: View {
                 if showsRestart {
                     Button("Analyser un autre lieu", action: onRestart)
                 }
-            }
-                .padding()
-            }
-            .task {
-                guard AppStoreScreenshotMode.current == .map else { return }
-                try? await Task.sleep(for: .milliseconds(400))
-                withAnimation(.none) {
-                    proxy.scrollTo("map", anchor: .top)
+                    }
+                    .frame(width: contentWidth)
+                    .padding(.horizontal, horizontalPadding)
+                    .padding(.vertical, 16)
+                }
+                .task {
+                    guard AppStoreScreenshotMode.current == .map else { return }
+                    try? await Task.sleep(for: .milliseconds(400))
+                    withAnimation(.none) {
+                        proxy.scrollTo("map", anchor: .top)
+                    }
                 }
             }
         }

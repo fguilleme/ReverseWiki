@@ -8,6 +8,7 @@
 import CoreLocation
 import CoreGraphics
 import Foundation
+import SwiftUI
 import Testing
 import UIKit
 @testable import ReverseWiki
@@ -139,6 +140,37 @@ struct ReverseWikiTests {
         defer { try? FileManager.default.removeItem(at: url) }
         let document = try #require(CGPDFDocument(url as CFURL))
         #expect(document.numberOfPages >= 2)
+    }
+
+    @Test @MainActor func landscapePhotoFitsPortraitResultView() throws {
+        let photo = UIGraphicsImageRenderer(
+            size: CGSize(width: 1_600, height: 900)
+        ).image { context in
+            UIColor.systemGreen.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 1_600, height: 900))
+        }
+        let result = CaptureResult(
+            imageData: try #require(photo.jpegData(compressionQuality: 0.9)),
+            coordinate: nil,
+            fact: PlaceFact(
+                lieu: "Lac Atitlán, Guatemala",
+                faitOfficiel: String(repeating: "Un récit touristique très détaillé. ", count: 12),
+                faitVerifie: String(repeating: "Une vérification historique particulièrement longue. ", count: 20),
+                sources: ["https://example.org/a-very-long-source-address"],
+                latitude: nil,
+                longitude: nil
+            ),
+            modelIdentifier: "gemini:gemini-3.6-flash"
+        )
+        let viewport = CGSize(width: 393, height: 852)
+        let renderer = ImageRenderer(content: ResultView(
+            result: result,
+            onRestart: {},
+            showsRestart: false
+        ).frame(width: viewport.width, height: viewport.height))
+        renderer.scale = 1
+        let image = try #require(renderer.uiImage)
+        #expect(image.size == viewport)
     }
 
     @Test func placeFactDecodesStructuredContract() throws {
