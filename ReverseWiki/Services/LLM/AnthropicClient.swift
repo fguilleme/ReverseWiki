@@ -34,6 +34,17 @@ final class AnthropicClient: LLMProviding {
             throw AppError.missingAPIKey(provider: "Anthropic")
         }
         guard let endpoint = configuration.endpoint else { throw AppError.invalidConfiguration }
+        let requestID = UUID()
+        let startedAt = ContinuousClock.now
+        let systemPrompt = FactPrompt.system
+        let userPrompt = FactPrompt.user(coordinate: coordinate)
+        LLMDiagnostics.logRequest(
+            id: requestID,
+            configuration: configuration,
+            imageData: imageData,
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt
+        )
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
@@ -45,8 +56,8 @@ final class AnthropicClient: LLMProviding {
             model: configuration.model,
             maxTokens: 900,
             temperature: configuration.temperature,
-            system: FactPrompt.system,
-            messages: [.init(role: "user", content: FactPrompt.user(coordinate: coordinate))]
+            system: systemPrompt,
+            messages: [.init(role: "user", content: userPrompt)]
         ))
 
         let data = try await HTTPValidator.data(for: request, session: session)
@@ -54,6 +65,15 @@ final class AnthropicClient: LLMProviding {
         guard let text = response.content.first(where: { $0.type == "text" })?.text else {
             throw AppError.invalidResponse
         }
-        return try FactPrompt.decode(text)
+        LLMDiagnostics.logResponse(
+            id: requestID,
+            configuration: configuration,
+            startedAt: startedAt,
+            data: data,
+            text: text
+        )
+        let fact = try FactPrompt.decode(text)
+        LLMDiagnostics.logDecoded(id: requestID, fact: fact)
+        return fact
     }
 }

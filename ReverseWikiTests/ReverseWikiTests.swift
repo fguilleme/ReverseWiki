@@ -173,6 +173,19 @@ struct ReverseWikiTests {
         #expect(image.size == viewport)
     }
 
+    @Test @MainActor func analysisImageIsActuallyLimitedTo1600Pixels() throws {
+        let source = UIGraphicsImageRenderer(
+            size: CGSize(width: 3_840, height: 2_160)
+        ).image { context in
+            UIColor.systemTeal.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 3_840, height: 2_160))
+        }
+        let data = try #require(source.normalizedJPEGData())
+        let normalized = try #require(UIImage(data: data))
+        #expect(normalized.size.width == 1_600)
+        #expect(normalized.size.height == 900)
+    }
+
     @Test func placeFactDecodesStructuredContract() throws {
         let json = """
         {"lieu":"Tour Eiffel","fait_officiel":"Un symbole.","fait_verifie":"Elle devait être temporaire.","sources":["https://example.org"],"latitude":48.8584,"longitude":2.2945}

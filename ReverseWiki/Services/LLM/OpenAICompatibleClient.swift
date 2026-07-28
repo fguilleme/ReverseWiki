@@ -76,6 +76,17 @@ final class OpenAICompatibleClient: LLMProviding {
               !configuration.model.isEmpty else {
             throw AppError.invalidConfiguration
         }
+        let requestID = UUID()
+        let startedAt = ContinuousClock.now
+        let systemPrompt = FactPrompt.system
+        let userPrompt = FactPrompt.user(coordinate: coordinate)
+        LLMDiagnostics.logRequest(
+            id: requestID,
+            configuration: configuration,
+            imageData: imageData,
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt
+        )
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
@@ -86,11 +97,11 @@ final class OpenAICompatibleClient: LLMProviding {
         request.httpBody = try JSONEncoder().encode(Request(
             model: configuration.model,
             messages: [
-                .init(role: "system", content: .text(FactPrompt.system)),
+                .init(role: "system", content: .text(systemPrompt)),
                 .init(
                     role: "user",
                     content: .parts([
-                        .text(FactPrompt.user(coordinate: coordinate)),
+                        .text(userPrompt),
                         .image(imageURL)
                     ])
                 )
@@ -103,7 +114,16 @@ final class OpenAICompatibleClient: LLMProviding {
         guard let text = response.choices.first?.message.content else {
             throw AppError.invalidResponse
         }
-        return try FactPrompt.decode(text)
+        LLMDiagnostics.logResponse(
+            id: requestID,
+            configuration: configuration,
+            startedAt: startedAt,
+            data: data,
+            text: text
+        )
+        let fact = try FactPrompt.decode(text)
+        LLMDiagnostics.logDecoded(id: requestID, fact: fact)
+        return fact
     }
 }
 

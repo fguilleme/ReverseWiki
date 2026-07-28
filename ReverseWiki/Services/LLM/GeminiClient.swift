@@ -68,6 +68,17 @@ final class GeminiClient: LLMProviding {
         guard let endpoint, !configuration.model.isEmpty else {
             throw AppError.invalidConfiguration
         }
+        let requestID = UUID()
+        let startedAt = ContinuousClock.now
+        let systemPrompt = FactPrompt.system
+        let userPrompt = FactPrompt.user(coordinate: coordinate)
+        LLMDiagnostics.logRequest(
+            id: requestID,
+            configuration: configuration,
+            imageData: imageData,
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt
+        )
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
@@ -75,11 +86,11 @@ final class GeminiClient: LLMProviding {
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.setValue(key, forHTTPHeaderField: "x-goog-api-key")
         let parts: [Request.Content.Part] = [
-            .text(FactPrompt.user(coordinate: coordinate)),
+            .text(userPrompt),
             .jpeg(imageData)
         ]
         request.httpBody = try JSONEncoder().encode(Request(
-            systemInstruction: .init(parts: [.text(FactPrompt.system)]),
+            systemInstruction: .init(parts: [.text(systemPrompt)]),
             contents: [.init(parts: parts)],
             generationConfig: .init(
                 temperature: configuration.temperature,
@@ -92,6 +103,15 @@ final class GeminiClient: LLMProviding {
         guard let text = response.candidates.first?.content.parts.first?.text else {
             throw AppError.invalidResponse
         }
-        return try FactPrompt.decode(text)
+        LLMDiagnostics.logResponse(
+            id: requestID,
+            configuration: configuration,
+            startedAt: startedAt,
+            data: data,
+            text: text
+        )
+        let fact = try FactPrompt.decode(text)
+        LLMDiagnostics.logDecoded(id: requestID, fact: fact)
+        return fact
     }
 }

@@ -79,13 +79,16 @@ final class CaptureViewModel {
     }
 }
 
-private extension UIImage {
+extension UIImage {
     func normalizedJPEGData() -> Data? {
         let maximumDimension: CGFloat = 1_600
         let scale = min(1, maximumDimension / max(size.width, size.height))
         let targetSize = CGSize(width: size.width * scale, height: size.height * scale)
-        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
         return renderer.image { _ in draw(in: CGRect(origin: .zero, size: targetSize)) }
-            .jpegData(compressionQuality: 0.92)
+            .jpegData(compressionQuality: 0.85)
     }
 }
