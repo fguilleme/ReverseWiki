@@ -66,7 +66,7 @@ struct ResultView: View {
                 if let coordinate = result.coordinate {
                     Map(initialPosition: .region(MKCoordinateRegion(
                         center: coordinate,
-                        span: MKCoordinateSpan(latitudeDelta: 0.015, longitudeDelta: 0.015)
+                        span: MKCoordinateSpan(latitudeDelta: 0.085, longitudeDelta: 0.085)
                     ))) {
                         Marker(result.fact.lieu, coordinate: coordinate)
                     }

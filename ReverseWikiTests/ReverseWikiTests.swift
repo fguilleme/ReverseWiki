@@ -186,6 +186,34 @@ struct ReverseWikiTests {
         #expect(normalized.size.height == 900)
     }
 
+    @Test func anthropicRequestContainsImageAndTextBlocks() throws {
+        let imageData = Data([0xFF, 0xD8, 0xFF, 0xD9])
+        let configuration = LLMConfiguration(
+            provider: .anthropic,
+            apiKey: "test-key",
+            model: "claude-test",
+            endpoint: URL(string: "https://example.org/messages"),
+            temperature: 0.2
+        )
+        let client = AnthropicClient(session: .shared, configuration: configuration)
+        let body = try client.requestBody(
+            imageData: imageData,
+            systemPrompt: "system",
+            userPrompt: "user"
+        )
+        let json = try #require(
+            JSONSerialization.jsonObject(with: body) as? [String: Any]
+        )
+        let messages = try #require(json["messages"] as? [[String: Any]])
+        let content = try #require(messages.first?["content"] as? [[String: Any]])
+        #expect(content.map { $0["type"] as? String } == ["image", "text"])
+        let source = try #require(content.first?["source"] as? [String: Any])
+        #expect(source["type"] as? String == "base64")
+        #expect(source["media_type"] as? String == "image/jpeg")
+        #expect(source["data"] as? String == imageData.base64EncodedString())
+        #expect(content.last?["text"] as? String == "user")
+    }
+
     @Test func placeFactDecodesStructuredContract() throws {
         let json = """
         {"lieu":"Tour Eiffel","fait_officiel":"Un symbole.","fait_verifie":"Elle devait être temporaire.","sources":["https://example.org"],"latitude":48.8584,"longitude":2.2945}

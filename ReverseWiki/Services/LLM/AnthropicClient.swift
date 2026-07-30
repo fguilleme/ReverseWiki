@@ -3,7 +3,43 @@ import Foundation
 
 final class AnthropicClient: LLMProviding {
     private struct Request: Encodable {
-        struct Message: Encodable { let role: String; let content: String }
+        struct Message: Encodable {
+            struct Content: Encodable {
+                struct Source: Encodable {
+                    let type: String
+                    let mediaType: String
+                    let data: String
+
+                    enum CodingKeys: String, CodingKey {
+                        case type, data
+                        case mediaType = "media_type"
+                    }
+                }
+
+                let type: String
+                let text: String?
+                let source: Source?
+
+                static func jpeg(_ data: Data) -> Content {
+                    Content(
+                        type: "image",
+                        text: nil,
+                        source: Source(
+                            type: "base64",
+                            mediaType: "image/jpeg",
+                            data: data.base64EncodedString()
+                        )
+                    )
+                }
+
+                static func text(_ value: String) -> Content {
+                    Content(type: "text", text: value, source: nil)
+                }
+            }
+
+            let role: String
+            let content: [Content]
+        }
         let model: String
         let maxTokens: Int
         let temperature: Double
@@ -52,13 +88,11 @@ final class AnthropicClient: LLMProviding {
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.setValue(key, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
-        request.httpBody = try JSONEncoder().encode(Request(
-            model: configuration.model,
-            maxTokens: 900,
-            temperature: configuration.temperature,
-            system: systemPrompt,
-            messages: [.init(role: "user", content: userPrompt)]
-        ))
+        request.httpBody = try requestBody(
+            imageData: imageData,
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt
+        )
 
         let data = try await HTTPValidator.data(for: request, session: session)
         let response = try JSONDecoder().decode(Response.self, from: data)
@@ -75,5 +109,27 @@ final class AnthropicClient: LLMProviding {
         let fact = try FactPrompt.decode(text)
         LLMDiagnostics.logDecoded(id: requestID, fact: fact)
         return fact
+    }
+
+    func requestBody(
+        imageData: Data,
+        systemPrompt: String,
+        userPrompt: String
+    ) throws -> Data {
+        try JSONEncoder().encode(Request(
+            model: configuration.model,
+            maxTokens: 900,
+            temperature: configuration.temperature,
+            system: systemPrompt,
+            messages: [
+                .init(
+                    role: "user",
+                    content: [
+                        .jpeg(imageData),
+                        .text(userPrompt)
+                    ]
+                )
+            ]
+        ))
     }
 }
