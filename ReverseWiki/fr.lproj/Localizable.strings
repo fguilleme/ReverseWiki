@@ -59,6 +59,7 @@
 "La clé API %@ n’est pas configurée." = "La clé API %@ n’est pas configurée.";
 "La configuration du fournisseur IA est invalide." = "La configuration du fournisseur IA est invalide.";
 "Le fournisseur IA a renvoyé une réponse inattendue." = "Le fournisseur IA a renvoyé une réponse inattendue.";
+"La réponse a été tronquée par la limite de génération. Réessayez." = "La réponse a été tronquée par la limite de génération. Réessayez.";
 "Erreur API %lld : %@" = "Erreur API %lld : %@";
 "Impossible de générer l’image à partager." = "Impossible de générer l’image à partager.";
 "Réponse inconnue" = "Réponse inconnue";

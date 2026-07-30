@@ -59,6 +59,7 @@
 "La clé API %@ n’est pas configurée." = "Ключ API для %@ не настроен.";
 "La configuration du fournisseur IA est invalide." = "Конфигурация ИИ-провайдера недействительна.";
 "Le fournisseur IA a renvoyé une réponse inattendue." = "ИИ-провайдер вернул неожиданный ответ.";
+"La réponse a été tronquée par la limite de génération. Réessayez." = "Ответ был обрезан из-за ограничения генерации. Повторите попытку.";
 "Erreur API %lld : %@" = "Ошибка API %lld: %@";
 "Impossible de générer l’image à partager." = "Не удалось создать изображение для публикации.";
 "Réponse inconnue" = "Неизвестный ответ";

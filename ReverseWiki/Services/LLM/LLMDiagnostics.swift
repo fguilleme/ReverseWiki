@@ -38,7 +38,8 @@ enum LLMDiagnostics {
         configuration: LLMConfiguration,
         startedAt: ContinuousClock.Instant,
         data: Data,
-        text: String
+        text: String,
+        stopReason: String? = nil
     ) {
 #if DEBUG
         let elapsed = startedAt.duration(to: .now)
@@ -50,6 +51,7 @@ enum LLMDiagnostics {
             totalDuration=\(String(describing: elapsed), privacy: .public)
             responseBytes=\(data.count)
             responseCharacters=\(text.count)
+            stopReason=\(stopReason ?? "unknown", privacy: .public)
             response=\(text, privacy: .public)
             """
         )

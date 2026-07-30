@@ -59,6 +59,7 @@
 "La clé API %@ n’est pas configurée." = "A chave de API de %@ não está configurada.";
 "La configuration du fournisseur IA est invalide." = "A configuração do provedor de IA é inválida.";
 "Le fournisseur IA a renvoyé une réponse inattendue." = "O provedor de IA retornou uma resposta inesperada.";
+"La réponse a été tronquée par la limite de génération. Réessayez." = "A resposta foi truncada pelo limite de geração. Tente novamente.";
 "Erreur API %lld : %@" = "Erro de API %lld: %@";
 "Impossible de générer l’image à partager." = "Não foi possível gerar a imagem para compartilhar.";
 "Réponse inconnue" = "Resposta desconhecida";

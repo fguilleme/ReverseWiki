@@ -59,6 +59,7 @@
 "La clé API %@ n’est pas configurée." = "لم يتم إعداد مفتاح API الخاص بـ %@.";
 "La configuration du fournisseur IA est invalide." = "إعداد مزوّد الذكاء الاصطناعي غير صالح.";
 "Le fournisseur IA a renvoyé une réponse inattendue." = "أعاد مزوّد الذكاء الاصطناعي استجابة غير متوقعة.";
+"La réponse a été tronquée par la limite de génération. Réessayez." = "تم اقتطاع الاستجابة بسبب حد التوليد. يُرجى المحاولة مرة أخرى.";
 "Erreur API %lld : %@" = "خطأ API رقم %lld: %@";
 "Impossible de générer l’image à partager." = "تعذّر إنشاء الصورة للمشاركة.";
 "Réponse inconnue" = "استجابة غير معروفة";

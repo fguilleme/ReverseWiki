@@ -2,6 +2,8 @@ import CoreLocation
 import Foundation
 
 final class AnthropicClient: LLMProviding {
+    static let responseTokenBudget = 4_096
+
     private struct Request: Encodable {
         struct Message: Encodable {
             struct Content: Encodable {
@@ -55,6 +57,12 @@ final class AnthropicClient: LLMProviding {
     private struct Response: Decodable {
         struct Content: Decodable { let type: String; let text: String? }
         let content: [Content]
+        let stopReason: String?
+
+        enum CodingKeys: String, CodingKey {
+            case content
+            case stopReason = "stop_reason"
+        }
     }
 
     private let session: URLSession
@@ -96,7 +104,11 @@ final class AnthropicClient: LLMProviding {
 
         let data = try await HTTPValidator.data(for: request, session: session)
         let response = try JSONDecoder().decode(Response.self, from: data)
-        guard let text = response.content.first(where: { $0.type == "text" })?.text else {
+        let text = response.content
+            .filter { $0.type == "text" }
+            .compactMap(\.text)
+            .joined()
+        guard !text.isEmpty else {
             throw AppError.invalidResponse
         }
         LLMDiagnostics.logResponse(
@@ -104,9 +116,20 @@ final class AnthropicClient: LLMProviding {
             configuration: configuration,
             startedAt: startedAt,
             data: data,
-            text: text
+            text: text,
+            stopReason: response.stopReason
         )
-        let fact = try FactPrompt.decode(text)
+        let fact: PlaceFact
+        do {
+            fact = try FactPrompt.decode(text)
+        } catch {
+            if response.stopReason == "max_tokens" {
+                throw AppError.invalidResponseDetail(
+                    String(localized: "La réponse a été tronquée par la limite de génération. Réessayez.")
+                )
+            }
+            throw error
+        }
         LLMDiagnostics.logDecoded(id: requestID, fact: fact)
         return fact
     }
@@ -118,7 +141,7 @@ final class AnthropicClient: LLMProviding {
     ) throws -> Data {
         try JSONEncoder().encode(Request(
             model: configuration.model,
-            maxTokens: 900,
+            maxTokens: Self.responseTokenBudget,
             temperature: configuration.temperature,
             system: systemPrompt,
             messages: [

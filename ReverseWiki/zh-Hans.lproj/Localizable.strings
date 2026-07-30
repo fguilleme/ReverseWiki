@@ -59,6 +59,7 @@
 "La clé API %@ n’est pas configurée." = "尚未配置 %@ API 密钥。";
 "La configuration du fournisseur IA est invalide." = "AI 提供商配置无效。";
 "Le fournisseur IA a renvoyé une réponse inattendue." = "AI 提供商返回了意外响应。";
+"La réponse a été tronquée par la limite de génération. Réessayez." = "响应因生成限制而被截断。请重试。";
 "Erreur API %lld : %@" = "API 错误 %lld：%@";
 "Impossible de générer l’image à partager." = "无法生成要分享的图像。";
 "Réponse inconnue" = "未知响应";

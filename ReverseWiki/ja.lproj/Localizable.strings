@@ -59,6 +59,7 @@
 "La clé API %@ n’est pas configurée." = "%@ のAPIキーが設定されていません。";
 "La configuration du fournisseur IA est invalide." = "AIプロバイダーの設定が無効です。";
 "Le fournisseur IA a renvoyé une réponse inattendue." = "AIプロバイダーから予期しない応答が返されました。";
+"La réponse a été tronquée par la limite de génération. Réessayez." = "生成上限により応答が途中で切れました。もう一度お試しください。";
 "Erreur API %lld : %@" = "APIエラー %lld：%@";
 "Impossible de générer l’image à partager." = "共有用画像を生成できませんでした。";
 "Réponse inconnue" = "不明な応答";

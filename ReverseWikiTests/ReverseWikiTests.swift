@@ -220,6 +220,7 @@ struct ReverseWikiTests {
         #expect(source["media_type"] as? String == "image/jpeg")
         #expect(source["data"] as? String == imageData.base64EncodedString())
         #expect(content.last?["text"] as? String == "user")
+        #expect(json["max_tokens"] as? Int == AnthropicClient.responseTokenBudget)
     }
 
     @Test func placeFactDecodesStructuredContract() throws {
