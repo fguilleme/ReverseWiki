@@ -29,7 +29,7 @@ final class ConfigurableLLMClient: LLMProviding {
 
     func cacheIdentifier() async -> String {
         let configuration = await settings.configuration()
-        return "\(configuration.provider.rawValue):\(configuration.model)"
+        return "\(configuration.provider.rawValue):\(configuration.model)#\(FactPrompt.cacheVersion)"
     }
 }
 
@@ -50,6 +50,8 @@ enum LLMClientFactory {
 }
 
 enum FactPrompt {
+    static let cacheVersion = "viewpoint-v2"
+
     static var system: String {
         let language = Locale.current.localizedString(
             forLanguageCode: Locale.current.language.languageCode?.identifier ?? "fr"
@@ -62,9 +64,13 @@ enum FactPrompt {
     Réponds exclusivement avec un objet JSON valide, sans Markdown ni texte avant/après, exactement \
     sous cette forme :
     {"lieu":"string","fait_officiel":"string","fait_verifie":"string","sources":["https://..."],\
-    "latitude":number|null,"longitude":number|null}
-    Les six champs sont obligatoires. Latitude et longitude doivent être les coordonnées décimales \
-    du lieu identifié avec une précision raisonnable, ou null si le lieu n’est pas assez certain. \
+    "latitude":number|null,"longitude":number|null,"photo_latitude":number|null,\
+    "photo_longitude":number|null}
+    Les huit champs sont obligatoires. Latitude et longitude sont les coordonnées décimales du lieu \
+    identifié. Photo_latitude et photo_longitude sont celles du point où se trouvait probablement \
+    le photographe. Déduis ce point de vue uniquement à partir d’indices visuels plausibles \
+    (perspective, relief, rive, rue, façade ou panorama) et utilise null si la précision serait \
+    trompeuse. \
     N’utilise jamais les coordonnées GPS facultatives fournies comme résultat sans avoir confirmé \
     qu’elles correspondent bien à l’image. Le champ "lieu" doit contenir uniquement le nom canonique \
     court du lieu et son pays, sans commentaire, comparaison, parenthèses ni explication. Écris en \
@@ -74,12 +80,19 @@ enum FactPrompt {
 
     static func user(coordinate: CLLocationCoordinate2D?) -> String {
         guard let coordinate else {
-            return "Identifie uniquement le sujet visible sur cette photo, puis réponds au format JSON demandé."
+            return """
+            Identifie uniquement le sujet visible sur cette photo. Aucune coordonnée GPS n’est \
+            disponible : essaie aussi de déterminer d’où la photo a été prise et renseigne \
+            photo_latitude et photo_longitude seulement si le point de vue peut être déduit avec \
+            une précision raisonnable. Réponds au format JSON demandé.
+            """
         }
         return """
         Identifie d’abord le sujet visible sur cette photo. Les coordonnées GPS facultatives \
         \(coordinate.latitude), \(coordinate.longitude) sont seulement un indice secondaire : \
-        ignore-les si elles sont incompatibles avec l’image. Réponds ensuite au format JSON demandé.
+        ignore-les si elles sont incompatibles avec l’image. Utilise-les pour photo_latitude et \
+        photo_longitude uniquement si elles correspondent au point de vue visible. Réponds ensuite \
+        au format JSON demandé.
         """
     }
 

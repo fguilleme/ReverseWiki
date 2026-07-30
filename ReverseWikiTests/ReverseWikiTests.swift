@@ -115,6 +115,14 @@ struct ReverseWikiTests {
             modelIdentifier: "gemini:gemini-3.6-flash"
         )
         #expect(result.modelDisplayName == "Gemini · gemini-3.6-flash")
+
+        let versionedResult = CaptureResult(
+            imageData: Data(),
+            coordinate: nil,
+            fact: result.fact,
+            modelIdentifier: "gemini:gemini-3.6-flash#viewpoint-v2"
+        )
+        #expect(versionedResult.modelDisplayName == "Gemini · gemini-3.6-flash")
     }
 
     @Test @MainActor func pdfExportCreatesPaginatedDocument() async throws {
@@ -216,11 +224,22 @@ struct ReverseWikiTests {
 
     @Test func placeFactDecodesStructuredContract() throws {
         let json = """
-        {"lieu":"Tour Eiffel","fait_officiel":"Un symbole.","fait_verifie":"Elle devait être temporaire.","sources":["https://example.org"],"latitude":48.8584,"longitude":2.2945}
+        {"lieu":"Tour Eiffel","fait_officiel":"Un symbole.","fait_verifie":"Elle devait être temporaire.","sources":["https://example.org"],"latitude":48.8584,"longitude":2.2945,"photo_latitude":48.8612,"photo_longitude":2.2899}
         """
         let fact = try JSONDecoder().decode(PlaceFact.self, from: Data(json.utf8))
         #expect(fact.lieu == "Tour Eiffel")
         #expect(fact.sources.count == 1)
         #expect(fact.identifiedCoordinate?.latitude == 48.8584)
+        #expect(fact.photoCoordinate?.latitude == 48.8612)
+        #expect(fact.photoCoordinate?.longitude == 2.2899)
+
+        let legacyJSON = """
+        {"lieu":"Tour Eiffel","fait_officiel":"Un symbole.","fait_verifie":"Un fait.","sources":[],"latitude":48.8584,"longitude":2.2945}
+        """
+        let legacyFact = try JSONDecoder().decode(
+            PlaceFact.self,
+            from: Data(legacyJSON.utf8)
+        )
+        #expect(legacyFact.photoCoordinate == nil)
     }
 }

@@ -64,11 +64,22 @@ struct ResultView: View {
                 }
 
                 if let coordinate = result.coordinate {
+                    if result.fact.photoCoordinate != nil {
+                        Label("Point de prise de vue estimé", systemImage: "camera.aperture")
+                            .font(.footnote.weight(.medium))
+                            .foregroundStyle(.secondary)
+                            .frame(width: contentWidth, alignment: .leading)
+                    }
                     Map(initialPosition: .region(MKCoordinateRegion(
                         center: coordinate,
                         span: MKCoordinateSpan(latitudeDelta: 0.085, longitudeDelta: 0.085)
                     ))) {
-                        Marker(result.fact.lieu, coordinate: coordinate)
+                        Marker(
+                            result.fact.photoCoordinate == nil
+                                ? result.fact.lieu
+                                : String(localized: "Point de prise de vue estimé"),
+                            coordinate: coordinate
+                        )
                     }
                     .frame(width: contentWidth, height: 220)
                     .clipShape(RoundedRectangle(cornerRadius: 20))

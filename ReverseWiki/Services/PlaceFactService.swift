@@ -35,7 +35,11 @@ final class PlaceFactService: PlaceFactProviding {
         }
 
         let resolvedCoordinate: CLLocationCoordinate2D?
-        if let identifiedCoordinate = fact.identifiedCoordinate {
+        if let photoCoordinate = fact.photoCoordinate {
+            resolvedCoordinate = photoCoordinate
+        } else if let coordinate {
+            resolvedCoordinate = coordinate
+        } else if let identifiedCoordinate = fact.identifiedCoordinate {
             resolvedCoordinate = identifiedCoordinate
         } else {
             resolvedCoordinate = try? await geocoder.coordinate(for: fact.lieu)

@@ -8,6 +8,28 @@ struct PlaceFact: Codable, Equatable, Sendable {
     let sources: [String]
     let latitude: Double?
     let longitude: Double?
+    let photoLatitude: Double?
+    let photoLongitude: Double?
+
+    init(
+        lieu: String,
+        faitOfficiel: String,
+        faitVerifie: String,
+        sources: [String],
+        latitude: Double?,
+        longitude: Double?,
+        photoLatitude: Double? = nil,
+        photoLongitude: Double? = nil
+    ) {
+        self.lieu = lieu
+        self.faitOfficiel = faitOfficiel
+        self.faitVerifie = faitVerifie
+        self.sources = sources
+        self.latitude = latitude
+        self.longitude = longitude
+        self.photoLatitude = photoLatitude
+        self.photoLongitude = photoLongitude
+    }
 
     enum CodingKeys: String, CodingKey {
         case lieu
@@ -15,11 +37,22 @@ struct PlaceFact: Codable, Equatable, Sendable {
         case faitVerifie = "fait_verifie"
         case sources
         case latitude, longitude
+        case photoLatitude = "photo_latitude"
+        case photoLongitude = "photo_longitude"
     }
 
     var identifiedCoordinate: CLLocationCoordinate2D? {
         guard let latitude, let longitude else { return nil }
         let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        return CLLocationCoordinate2DIsValid(coordinate) ? coordinate : nil
+    }
+
+    var photoCoordinate: CLLocationCoordinate2D? {
+        guard let photoLatitude, let photoLongitude else { return nil }
+        let coordinate = CLLocationCoordinate2D(
+            latitude: photoLatitude,
+            longitude: photoLongitude
+        )
         return CLLocationCoordinate2DIsValid(coordinate) ? coordinate : nil
     }
 }
@@ -47,7 +80,9 @@ struct CaptureResult: Identifiable {
         let components = modelIdentifier.split(separator: ":", maxSplits: 1).map(String.init)
         guard components.count == 2 else { return modelIdentifier }
         let providerName = LLMProvider(rawValue: components[0])?.displayName ?? components[0]
-        return "\(providerName) · \(components[1])"
+        let modelName = components[1].split(separator: "#", maxSplits: 1).first
+            .map(String.init) ?? components[1]
+        return "\(providerName) · \(modelName)"
     }
 }
 
