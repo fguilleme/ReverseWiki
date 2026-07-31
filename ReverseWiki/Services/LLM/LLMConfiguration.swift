@@ -69,6 +69,18 @@ struct LLMConfiguration: Sendable {
 }
 
 extension LLMProvider {
+    func acceptsMediumPhotoConfidence(model: String) -> Bool {
+        switch self {
+        case .anthropic, .openAI:
+            true
+        case .openRouter:
+            model.lowercased().hasPrefix("anthropic/")
+                || model.lowercased().hasPrefix("openai/")
+        case .gemini, .kimi, .custom:
+            false
+        }
+    }
+
     var analysisTimeout: TimeInterval {
         switch self {
         case .kimi: 240
@@ -77,10 +89,7 @@ extension LLMProvider {
     }
 
     var requestTemperature: Double {
-        switch self {
-        case .kimi: 1
-        default: 0.2
-        }
+        1
     }
 
     var defaultModel: String {

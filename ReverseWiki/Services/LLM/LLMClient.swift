@@ -50,7 +50,7 @@ enum LLMClientFactory {
 }
 
 enum FactPrompt {
-    static let cacheVersion = "viewpoint-v2"
+    static let cacheVersion = "viewpoint-radius-v4"
 
     static var system: String {
         let language = Locale.current.localizedString(
@@ -65,12 +65,18 @@ enum FactPrompt {
     sous cette forme :
     {"lieu":"string","fait_officiel":"string","fait_verifie":"string","sources":["https://..."],\
     "latitude":number|null,"longitude":number|null,"photo_latitude":number|null,\
-    "photo_longitude":number|null}
-    Les huit champs sont obligatoires. Latitude et longitude sont les coordonnées décimales du lieu \
+    "photo_longitude":number|null,"photo_location_confidence":"high"|"medium"|"low"|null,\
+    "photo_location_accuracy_meters":number|null}
+    Les dix champs sont obligatoires. Latitude et longitude sont les coordonnées décimales du lieu \
     identifié. Photo_latitude et photo_longitude sont celles du point où se trouvait probablement \
     le photographe. Déduis ce point de vue uniquement à partir d’indices visuels plausibles \
     (perspective, relief, rive, rue, façade ou panorama) et utilise null si la précision serait \
-    trompeuse. \
+    trompeuse. Photo_location_confidence vaut "high" uniquement lorsque des indices visuels \
+    distinctifs permettent de situer le photographe avec une précision raisonnable, "medium" \
+    lorsqu’il s’agit d’une zone probable, et "low" lorsque l’estimation est spéculative. Mets les \
+    Photo_location_accuracy_meters est le rayon d’incertitude estimé en mètres autour du point \
+    proposé ; choisis une valeur réaliste et suffisamment prudente. Mets les quatre champs photo \
+    à null si aucun point de vue défendable ne peut être proposé. \
     N’utilise jamais les coordonnées GPS facultatives fournies comme résultat sans avoir confirmé \
     qu’elles correspondent bien à l’image. Le champ "lieu" doit contenir uniquement le nom canonique \
     court du lieu et son pays, sans commentaire, comparaison, parenthèses ni explication. Écris en \
@@ -83,7 +89,8 @@ enum FactPrompt {
             return """
             Identifie uniquement le sujet visible sur cette photo. Aucune coordonnée GPS n’est \
             disponible : essaie aussi de déterminer d’où la photo a été prise et renseigne \
-            photo_latitude et photo_longitude seulement si le point de vue peut être déduit avec \
+            photo_latitude, photo_longitude, photo_location_confidence et \
+            photo_location_accuracy_meters seulement si le point de vue peut être déduit avec \
             une précision raisonnable. Réponds au format JSON demandé.
             """
         }

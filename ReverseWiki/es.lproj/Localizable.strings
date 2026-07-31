@@ -90,3 +90,4 @@
 "Température" = "Temperatura";
 "Certains modèles imposent une valeur précise, par exemple 1,0." = "Algunos modelos requieren un valor concreto, por ejemplo 1,0.";
 "Point de prise de vue estimé" = "Ubicación estimada de la foto";
+"Rayon d’incertitude : environ %@" = "Radio de incertidumbre: aproximadamente %@";

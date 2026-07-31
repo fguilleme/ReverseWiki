@@ -8,7 +8,7 @@ enum PDFExportService {
             throw AppError.exportFailed
         }
 
-        let mapImage = try? await mapSnapshot(for: result.coordinate)
+        let mapImage = try? await mapSnapshot(for: result)
         let formatter = UISimpleTextPrintFormatter(attributedText: document(
             for: result,
             photo: photo,
@@ -34,23 +34,71 @@ enum PDFExportService {
         return url
     }
 
-    private static func mapSnapshot(for coordinate: CLLocationCoordinate2D?) async throws -> UIImage? {
-        guard let coordinate else { return nil }
+    private static func mapSnapshot(for result: CaptureResult) async throws -> UIImage? {
+        guard let coordinate = result.coordinate else { return nil }
         let options = MKMapSnapshotter.Options()
-        options.region = MKCoordinateRegion(
-            center: coordinate,
-            span: MKCoordinateSpan(latitudeDelta: 0.015, longitudeDelta: 0.015)
-        )
+        if let radius = result.estimatedPhotoAccuracyMeters {
+            let visibleDiameter = min(max(radius * 3, 4_000), 240_000)
+            options.region = MKCoordinateRegion(
+                center: coordinate,
+                latitudinalMeters: visibleDiameter,
+                longitudinalMeters: visibleDiameter
+            )
+        } else {
+            options.region = MKCoordinateRegion(
+                center: coordinate,
+                span: MKCoordinateSpan(latitudeDelta: 0.085, longitudeDelta: 0.085)
+            )
+        }
         options.size = CGSize(width: 1_000, height: 520)
         options.scale = 2
         let snapshot = try await MKMapSnapshotter(options: options).start()
         let marker = UIImage(systemName: "mappin.circle.fill")?
             .withTintColor(.systemRed, renderingMode: .alwaysOriginal)
         let point = snapshot.point(for: coordinate)
-        return UIGraphicsImageRenderer(size: snapshot.image.size).image { _ in
+        return UIGraphicsImageRenderer(size: snapshot.image.size).image { context in
             snapshot.image.draw(at: .zero)
+            if let radius = result.estimatedPhotoAccuracyMeters {
+                drawAccuracyCircle(
+                    radiusMeters: radius,
+                    coordinate: coordinate,
+                    center: point,
+                    snapshot: snapshot,
+                    context: context.cgContext
+                )
+            }
             marker?.draw(in: CGRect(x: point.x - 18, y: point.y - 36, width: 36, height: 36))
         }
+    }
+
+    private static func drawAccuracyCircle(
+        radiusMeters: Double,
+        coordinate: CLLocationCoordinate2D,
+        center: CGPoint,
+        snapshot: MKMapSnapshotter.Snapshot,
+        context: CGContext
+    ) {
+        let centerMapPoint = MKMapPoint(coordinate)
+        let mapPointRadius = radiusMeters / MKMetersPerMapPointAtLatitude(coordinate.latitude)
+        let edgeCoordinate = MKMapPoint(
+            x: centerMapPoint.x + mapPointRadius,
+            y: centerMapPoint.y
+        ).coordinate
+        let edge = snapshot.point(for: edgeCoordinate)
+        let pixelRadius = abs(edge.x - center.x)
+        guard pixelRadius.isFinite, pixelRadius > 0 else { return }
+
+        let circle = CGRect(
+            x: center.x - pixelRadius,
+            y: center.y - pixelRadius,
+            width: pixelRadius * 2,
+            height: pixelRadius * 2
+        )
+        context.setFillColor(UIColor.systemBlue.withAlphaComponent(0.18).cgColor)
+        context.fillEllipse(in: circle)
+        context.setStrokeColor(UIColor.systemBlue.withAlphaComponent(0.75).cgColor)
+        context.setLineWidth(3)
+        context.strokeEllipse(in: circle)
     }
 
     private static func document(
@@ -104,6 +152,24 @@ enum PDFExportService {
 
         if let mapImage {
             appendHeading(String(localized: "Carte"), to: document, color: indigo)
+            if result.estimatedPhotoCoordinate != nil {
+                append(
+                    "\(String(localized: "Point de prise de vue estimé"))\n",
+                    to: document,
+                    font: .systemFont(ofSize: 11, weight: .semibold),
+                    color: .darkGray,
+                    spacingAfter: 3
+                )
+                if let accuracyLabel = result.estimatedPhotoAccuracyLabel {
+                    append(
+                        "\(accuracyLabel)\n",
+                        to: document,
+                        font: .systemFont(ofSize: 10),
+                        color: .darkGray,
+                        spacingAfter: 8
+                    )
+                }
+            }
             appendImage(mapImage, to: document, maximumHeight: 265)
         }
 

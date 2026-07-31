@@ -90,3 +90,4 @@
 "Température" = "温度";
 "Certains modèles imposent une valeur précise, par exemple 1,0." = "部分模型要求使用特定值，例如 1.0。";
 "Point de prise de vue estimé" = "推测的拍摄位置";
+"Rayon d’incertitude : environ %@" = "不确定半径：约 %@";

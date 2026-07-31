@@ -90,3 +90,4 @@
 "Température" = "Temperatur";
 "Certains modèles imposent une valeur précise, par exemple 1,0." = "Einige Modelle erfordern einen bestimmten Wert, zum Beispiel 1,0.";
 "Point de prise de vue estimé" = "Geschätzter Aufnahmestandort";
+"Rayon d’incertitude : environ %@" = "Unsicherheitsradius: etwa %@";

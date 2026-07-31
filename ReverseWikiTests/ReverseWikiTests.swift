@@ -85,8 +85,10 @@ struct ReverseWikiTests {
 
     @Test func kimiUsesRequiredTemperature() {
         #expect(LLMProvider.kimi.requestTemperature == 1)
-        #expect(LLMProvider.openAI.requestTemperature == 0.2)
-        #expect(LLMProvider.openRouter.requestTemperature == 0.2)
+        #expect(LLMProvider.openAI.requestTemperature == 1)
+        #expect(LLMProvider.openRouter.requestTemperature == 1)
+        #expect(LLMProvider.anthropic.requestTemperature == 1)
+        #expect(LLMProvider.gemini.requestTemperature == 1)
     }
 
     @Test func kimiAllowsLongMultimodalAnalysis() {
@@ -120,7 +122,7 @@ struct ReverseWikiTests {
             imageData: Data(),
             coordinate: nil,
             fact: result.fact,
-            modelIdentifier: "gemini:gemini-3.6-flash#viewpoint-v2"
+            modelIdentifier: "gemini:gemini-3.6-flash#viewpoint-radius-v4"
         )
         #expect(versionedResult.modelDisplayName == "Gemini · gemini-3.6-flash")
     }
@@ -225,7 +227,7 @@ struct ReverseWikiTests {
 
     @Test func placeFactDecodesStructuredContract() throws {
         let json = """
-        {"lieu":"Tour Eiffel","fait_officiel":"Un symbole.","fait_verifie":"Elle devait être temporaire.","sources":["https://example.org"],"latitude":48.8584,"longitude":2.2945,"photo_latitude":48.8612,"photo_longitude":2.2899}
+        {"lieu":"Tour Eiffel","fait_officiel":"Un symbole.","fait_verifie":"Elle devait être temporaire.","sources":["https://example.org"],"latitude":48.8584,"longitude":2.2945,"photo_latitude":48.8612,"photo_longitude":2.2899,"photo_location_confidence":"high","photo_location_accuracy_meters":350}
         """
         let fact = try JSONDecoder().decode(PlaceFact.self, from: Data(json.utf8))
         #expect(fact.lieu == "Tour Eiffel")
@@ -233,6 +235,9 @@ struct ReverseWikiTests {
         #expect(fact.identifiedCoordinate?.latitude == 48.8584)
         #expect(fact.photoCoordinate?.latitude == 48.8612)
         #expect(fact.photoCoordinate?.longitude == 2.2899)
+        #expect(fact.photoLocationConfidence == .high)
+        #expect(fact.trustedPhotoCoordinate != nil)
+        #expect(fact.boundedPhotoLocationAccuracyMeters == 350)
 
         let legacyJSON = """
         {"lieu":"Tour Eiffel","fait_officiel":"Un symbole.","fait_verifie":"Un fait.","sources":[],"latitude":48.8584,"longitude":2.2945}
@@ -242,5 +247,55 @@ struct ReverseWikiTests {
             from: Data(legacyJSON.utf8)
         )
         #expect(legacyFact.photoCoordinate == nil)
+        #expect(legacyFact.trustedPhotoCoordinate == nil)
+    }
+
+    @Test func estimatedPhotoCoordinateAcceptsMediumConfidence() {
+        let mediumConfidenceFact = PlaceFact(
+            lieu: "Lac Atitlán, Guatemala",
+            faitOfficiel: "Récit",
+            faitVerifie: "Fait",
+            sources: [],
+            latitude: 14.69,
+            longitude: -91.20,
+            photoLatitude: 14.73,
+            photoLongitude: -91.15,
+            photoLocationConfidence: .medium,
+            photoLocationAccuracyMeters: 5_000
+        )
+        #expect(mediumConfidenceFact.photoCoordinate != nil)
+        #expect(mediumConfidenceFact.trustedPhotoCoordinate == nil)
+        #expect(mediumConfidenceFact.acceptedPhotoCoordinate(allowingMedium: true) != nil)
+        #expect(mediumConfidenceFact.acceptedPhotoCoordinate(allowingMedium: false) == nil)
+        #expect(mediumConfidenceFact.boundedPhotoLocationAccuracyMeters == 5_000)
+
+        let result = CaptureResult(
+            imageData: Data(),
+            coordinate: nil,
+            fact: mediumConfidenceFact,
+            modelIdentifier: "anthropic:claude-fable-5#viewpoint-radius-v4"
+        )
+        #expect(result.estimatedPhotoAccuracyLabel != nil)
+    }
+
+    @Test func unknownPhotoConfidenceIsHandledConservatively() throws {
+        let json = """
+        {"lieu":"Lieu","fait_officiel":"Récit","fait_verifie":"Fait","sources":[],"latitude":null,"longitude":null,"photo_latitude":12.3,"photo_longitude":45.6,"photo_location_confidence":"uncertain"}
+        """
+        let fact = try JSONDecoder().decode(PlaceFact.self, from: Data(json.utf8))
+        #expect(fact.photoLocationConfidence == .low)
+        #expect(fact.trustedPhotoCoordinate == nil)
+    }
+
+    @Test func mediumPhotoConfidenceDependsOnProviderReliability() {
+        #expect(LLMProvider.anthropic.acceptsMediumPhotoConfidence(model: "claude-fable-5"))
+        #expect(LLMProvider.openAI.acceptsMediumPhotoConfidence(model: "gpt-5.6"))
+        #expect(!LLMProvider.gemini.acceptsMediumPhotoConfidence(model: "gemini-3.6-flash"))
+        #expect(LLMProvider.openRouter.acceptsMediumPhotoConfidence(
+            model: "anthropic/claude-sonnet-4.5"
+        ))
+        #expect(!LLMProvider.openRouter.acceptsMediumPhotoConfidence(
+            model: "google/gemini-3.6-flash"
+        ))
     }
 }

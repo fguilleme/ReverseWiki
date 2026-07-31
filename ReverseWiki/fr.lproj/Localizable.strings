@@ -90,3 +90,4 @@
 "Température" = "Température";
 "Certains modèles imposent une valeur précise, par exemple 1,0." = "Certains modèles imposent une valeur précise, par exemple 1,0.";
 "Point de prise de vue estimé" = "Point de prise de vue estimé";
+"Rayon d’incertitude : environ %@" = "Rayon d’incertitude : environ %@";

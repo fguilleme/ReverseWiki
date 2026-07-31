@@ -90,3 +90,4 @@
 "Température" = "温度";
 "Certains modèles imposent une valeur précise, par exemple 1,0." = "モデルによっては、1.0などの特定の値が必要です。";
 "Point de prise de vue estimé" = "推定撮影地点";
+"Rayon d’incertitude : environ %@" = "不確実性の半径：約%@";

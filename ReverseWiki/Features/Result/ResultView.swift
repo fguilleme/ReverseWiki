@@ -64,18 +64,25 @@ struct ResultView: View {
                 }
 
                 if let coordinate = result.coordinate {
-                    if result.fact.photoCoordinate != nil {
-                        Label("Point de prise de vue estimé", systemImage: "camera.aperture")
-                            .font(.footnote.weight(.medium))
-                            .foregroundStyle(.secondary)
-                            .frame(width: contentWidth, alignment: .leading)
+                    if result.estimatedPhotoCoordinate != nil {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Label("Point de prise de vue estimé", systemImage: "camera.aperture")
+                            if let accuracyLabel = result.estimatedPhotoAccuracyLabel {
+                                Text(accuracyLabel)
+                            }
+                        }
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: contentWidth, alignment: .leading)
                     }
-                    Map(initialPosition: .region(MKCoordinateRegion(
-                        center: coordinate,
-                        span: MKCoordinateSpan(latitudeDelta: 0.085, longitudeDelta: 0.085)
-                    ))) {
+                    Map(initialPosition: .region(mapRegion(center: coordinate))) {
+                        if let accuracy = result.estimatedPhotoAccuracyMeters {
+                            MapCircle(center: coordinate, radius: accuracy)
+                                .foregroundStyle(.blue.opacity(0.18))
+                                .stroke(.blue.opacity(0.75), lineWidth: 2)
+                        }
                         Marker(
-                            result.fact.photoCoordinate == nil
+                            result.estimatedPhotoCoordinate == nil
                                 ? result.fact.lieu
                                 : String(localized: "Point de prise de vue estimé"),
                             coordinate: coordinate
@@ -192,6 +199,16 @@ struct ResultView: View {
                 exportError = error.localizedDescription
             }
         }
+    }
+
+    private func mapRegion(center: CLLocationCoordinate2D) -> MKCoordinateRegion {
+        let radius = result.estimatedPhotoAccuracyMeters ?? 3_500
+        let visibleDiameter = min(max(radius * 3, 4_000), 240_000)
+        return MKCoordinateRegion(
+            center: center,
+            latitudinalMeters: visibleDiameter,
+            longitudinalMeters: visibleDiameter
+        )
     }
 
 }

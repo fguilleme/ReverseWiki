@@ -34,8 +34,18 @@ final class PlaceFactService: PlaceFactProviding {
             )
         }
 
+        let identifierParts = cacheIdentifier.split(separator: ":", maxSplits: 1).map(String.init)
+        let provider = identifierParts.first.flatMap(LLMProvider.init(rawValue:))
+        let model = identifierParts.count == 2
+            ? String(identifierParts[1].split(separator: "#", maxSplits: 1)[0])
+            : ""
+        let allowsMediumPhotoConfidence = provider?
+            .acceptsMediumPhotoConfidence(model: model) ?? false
+
         let resolvedCoordinate: CLLocationCoordinate2D?
-        if let photoCoordinate = fact.photoCoordinate {
+        if let photoCoordinate = fact.acceptedPhotoCoordinate(
+            allowingMedium: allowsMediumPhotoConfidence
+        ) {
             resolvedCoordinate = photoCoordinate
         } else if let coordinate {
             resolvedCoordinate = coordinate

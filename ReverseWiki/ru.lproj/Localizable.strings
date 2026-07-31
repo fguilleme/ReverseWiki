@@ -90,3 +90,4 @@
 "Température" = "Температура";
 "Certains modèles imposent une valeur précise, par exemple 1,0." = "Некоторые модели требуют точного значения, например 1,0.";
 "Point de prise de vue estimé" = "Предполагаемое место съёмки";
+"Rayon d’incertitude : environ %@" = "Радиус неопределённости: около %@";
