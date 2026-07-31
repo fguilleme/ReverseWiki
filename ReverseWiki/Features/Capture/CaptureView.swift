@@ -19,6 +19,9 @@ struct CaptureView: View {
                         Text("Localisation du lieu, recherche du contexte et vérification des sources.")
                             .multilineTextAlignment(.center)
                             .foregroundStyle(.secondary)
+                        Button("Annuler", action: viewModel.cancelAnalysis)
+                            .buttonStyle(.bordered)
+                            .controlSize(.large)
                     }
                     .padding(32)
                 case let .result(result):

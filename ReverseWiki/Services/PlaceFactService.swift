@@ -26,6 +26,7 @@ final class PlaceFactService: PlaceFactProviding {
             fact = cached
         } else {
             fact = try await llm.fetchFact(imageData: imageData, coordinate: coordinate)
+            try Task.checkCancellation()
             try await cache.save(
                 fact,
                 for: coordinate,
@@ -33,6 +34,7 @@ final class PlaceFactService: PlaceFactProviding {
                 cacheIdentifier: cacheIdentifier
             )
         }
+        try Task.checkCancellation()
 
         let identifierParts = cacheIdentifier.split(separator: ":", maxSplits: 1).map(String.init)
         let provider = identifierParts.first.flatMap(LLMProvider.init(rawValue:))
@@ -54,6 +56,7 @@ final class PlaceFactService: PlaceFactProviding {
         } else {
             resolvedCoordinate = try? await geocoder.coordinate(for: fact.lieu)
         }
+        try Task.checkCancellation()
         return PlaceAnalysis(
             fact: fact,
             coordinate: resolvedCoordinate,

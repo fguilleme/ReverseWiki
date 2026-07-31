@@ -26,6 +26,8 @@ final class CaptureViewModel {
 
     private let locationService: LocationService
     private let placeFactService: PlaceFactProviding
+    @ObservationIgnored private var analysisTask: Task<Void, Never>?
+    @ObservationIgnored private var analysisID: UUID?
 
     init(locationService: LocationService, placeFactService: PlaceFactProviding) {
         self.locationService = locationService
@@ -38,9 +40,14 @@ final class CaptureViewModel {
             return
         }
         state = .processing
-        Task {
-            let coordinate = (try? await locationService.currentLocation())?.coordinate
-            await analyze(imageData: data, coordinate: coordinate)
+        startAnalysis(imageData: data) { [locationService] in
+            do {
+                return try await locationService.currentLocation().coordinate
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                return nil
+            }
         }
     }
 
@@ -50,32 +57,91 @@ final class CaptureViewModel {
             return
         }
         state = .processing
-        Task {
-            await analyze(imageData: data, coordinate: coordinate)
-        }
+        startAnalysis(coordinate: coordinate, imageData: data)
     }
 
     func reset() {
+        cancelAnalysis()
+    }
+
+    func cancelAnalysis() {
+        analysisID = nil
+        analysisTask?.cancel()
+        analysisTask = nil
         state = .ready
     }
 
-    private func analyze(imageData: Data, coordinate: CLLocationCoordinate2D?) async {
+    private func startAnalysis(
+        coordinate: CLLocationCoordinate2D?,
+        imageData: Data
+    ) {
+        startAnalysis(imageData: imageData) { coordinate }
+    }
+
+    private func startAnalysis(
+        imageData: Data,
+        coordinate: @escaping @MainActor () async throws -> CLLocationCoordinate2D?
+    ) {
+        analysisTask?.cancel()
+        let id = UUID()
+        analysisID = id
+        analysisTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                let resolvedCoordinate = try await coordinate()
+                try Task.checkCancellation()
+                await analyze(
+                    id: id,
+                    imageData: imageData,
+                    coordinate: resolvedCoordinate
+                )
+            } catch is CancellationError {
+                finishCancelledAnalysis(id: id)
+            } catch {
+                finishFailedAnalysis(id: id, error: error)
+            }
+        }
+    }
+
+    private func analyze(
+        id: UUID,
+        imageData: Data,
+        coordinate: CLLocationCoordinate2D?
+    ) async {
         do {
             let analysis = try await placeFactService.analyze(
                 for: coordinate,
                 imageData: imageData
             )
+            try Task.checkCancellation()
+            guard analysisID == id else { return }
             state = .result(CaptureResult(
                 imageData: imageData,
                 coordinate: analysis.coordinate,
                 fact: analysis.fact,
                 modelIdentifier: analysis.modelIdentifier
             ))
+            analysisID = nil
+            analysisTask = nil
         } catch is CancellationError {
-            state = .ready
+            finishCancelledAnalysis(id: id)
         } catch {
-            state = .failed(error.localizedDescription)
+            finishFailedAnalysis(id: id, error: error)
         }
+    }
+
+    private func finishCancelledAnalysis(id: UUID) {
+        guard analysisID == id else { return }
+        analysisID = nil
+        analysisTask = nil
+        state = .ready
+    }
+
+    private func finishFailedAnalysis(id: UUID, error: Error) {
+        guard analysisID == id else { return }
+        analysisID = nil
+        analysisTask = nil
+        state = .failed(error.localizedDescription)
     }
 }
 

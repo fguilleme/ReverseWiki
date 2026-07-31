@@ -14,18 +14,29 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
     func currentLocation() async throws -> CLLocation {
         guard continuation == nil else { throw AppError.locationUnavailable }
 
-        return try await withCheckedThrowingContinuation {
-            continuation = $0
+        return try await withTaskCancellationHandler {
+            try Task.checkCancellation()
+            return try await withCheckedThrowingContinuation {
+                continuation = $0
+                if Task.isCancelled {
+                    resume(.failure(CancellationError()))
+                    return
+                }
 
-            switch manager.authorizationStatus {
-            case .notDetermined:
-                manager.requestWhenInUseAuthorization()
-            case .denied, .restricted:
-                resume(.failure(AppError.locationPermissionDenied))
-            case .authorizedAlways, .authorizedWhenInUse:
-                manager.requestLocation()
-            @unknown default:
-                resume(.failure(AppError.locationUnavailable))
+                switch manager.authorizationStatus {
+                case .notDetermined:
+                    manager.requestWhenInUseAuthorization()
+                case .denied, .restricted:
+                    resume(.failure(AppError.locationPermissionDenied))
+                case .authorizedAlways, .authorizedWhenInUse:
+                    manager.requestLocation()
+                @unknown default:
+                    resume(.failure(AppError.locationUnavailable))
+                }
+            }
+        } onCancel: {
+            Task { @MainActor [weak self] in
+                self?.resume(.failure(CancellationError()))
             }
         }
     }
