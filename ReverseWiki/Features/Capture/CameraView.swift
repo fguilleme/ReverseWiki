@@ -4,10 +4,12 @@ import UIKit
 
 struct CameraView: UIViewControllerRepresentable {
     let onCapture: (UIImage) -> Void
+    let onCancel: () -> Void
 
     func makeUIViewController(context: Context) -> CameraViewController {
         let controller = CameraViewController()
         controller.onCapture = onCapture
+        controller.onCancel = onCancel
         return controller
     }
 
@@ -16,6 +18,7 @@ struct CameraView: UIViewControllerRepresentable {
 
 final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate {
     var onCapture: ((UIImage) -> Void)?
+    var onCancel: (() -> Void)?
     private let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
     private let previewLayer = AVCaptureVideoPreviewLayer()
@@ -38,6 +41,7 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
         previewLayer.videoGravity = .resizeAspectFill
         view.layer.addSublayer(previewLayer)
         configureShutter()
+        configureCancelButton()
     }
 
     override func viewDidLayoutSubviews() {
@@ -74,8 +78,39 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
         ])
     }
 
+    private func configureCancelButton() {
+        var configuration = UIButton.Configuration.filled()
+        configuration.title = String(localized: "Annuler")
+        configuration.image = UIImage(systemName: "xmark")
+        configuration.imagePadding = 8
+        configuration.baseBackgroundColor = UIColor.black.withAlphaComponent(0.55)
+        configuration.baseForegroundColor = .white
+        configuration.cornerStyle = .capsule
+
+        let button = UIButton(configuration: configuration)
+        button.addTarget(self, action: #selector(cancel), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.accessibilityLabel = String(localized: "Annuler")
+        view.addSubview(button)
+        NSLayoutConstraint.activate([
+            button.leadingAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.leadingAnchor,
+                constant: 16
+            ),
+            button.topAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.topAnchor,
+                constant: 12
+            ),
+            button.heightAnchor.constraint(greaterThanOrEqualToConstant: 44)
+        ])
+    }
+
     @objc private func capture() {
         output.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
+    }
+
+    @objc private func cancel() {
+        onCancel?()
     }
 
     func photoOutput(

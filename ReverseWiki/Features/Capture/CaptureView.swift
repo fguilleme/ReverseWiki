@@ -50,10 +50,15 @@ struct CaptureView: View {
                 }
             }
             .fullScreenCover(isPresented: $viewModel.isCameraPresented) {
-                CameraView { image in
-                    viewModel.isCameraPresented = false
-                    viewModel.processCapturedImage(image)
-                }
+                CameraView(
+                    onCapture: { image in
+                        viewModel.isCameraPresented = false
+                        viewModel.processCapturedImage(image)
+                    },
+                    onCancel: {
+                        viewModel.isCameraPresented = false
+                    }
+                )
                 .ignoresSafeArea()
             }
             .sheet(isPresented: $viewModel.isPhotoPickerPresented) {
