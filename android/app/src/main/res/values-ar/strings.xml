@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="help_title">المساعدة</string>
+    <string name="help_welcome">مرحبًا بك في Reverse Wiki</string>
+    <string name="help_subtitle">اكتشف ما لا ترويه الحكايات السياحية.</string>
+    <string name="help_photo_title">التقط صورة أو استوردها</string>
+    <string name="help_photo_description">الصورة هي الدليل الأساسي المستخدم لتحديد المكان.</string>
+    <string name="help_location_title">الموقع اختياري</string>
+    <string name="help_location_description">يمكن لنظام GPS المساعدة في التحليل، لكنه يُتجاهل إذا لم يتطابق مع الصورة.</string>
+    <string name="help_model_title">اختر النموذج</string>
+    <string name="help_model_description">اختر مزودًا ونموذجًا يدعم الصور. تبقى المفاتيح مشفرة على هذا الجهاز.</string>
+    <string name="help_model_advice_title">أي نموذج تختار؟</string>
+    <string name="help_model_advice_shared">يمكن تشغيل Gemini مجانًا باستخدام المفتاح المشترك للتطبيق، لكن الحصة والأداء مشتركان بين المستخدمين.</string>
+    <string name="help_model_advice_key">لاستخدام أكثر موثوقية، أضف مفتاح Gemini المجاني الخاص بك. يمكنك أيضًا اختيار نماذج مدفوعة مثل Claude أو GPT.</string>
+    <string name="help_sources_title">تحقق من المصادر</string>
+    <string name="help_sources_description">تعرض النتيجة حقيقة موثقة ومصادرها، ولا تعرض الخريطة إلا عند تأكيد الموقع.</string>
+    <string name="help_history_title">استعرض اكتشافاتك</string>
+    <string name="help_history_description">تُحفظ التحليلات في السجل ويمكن حذفها في أي وقت.</string>
+    <string name="start">ابدأ</string>
+    <string name="close">إغلاق</string>
+    <string name="ai_title">الذكاء الاصطناعي</string>
+    <string name="provider">المزود</string>
+    <string name="model">النموذج</string>
+    <string name="choose_model">اختر نموذجًا</string>
+    <string name="loading_models">جارٍ تحميل النماذج…</string>
+    <string name="refresh_models">تحديث النماذج</string>
+    <string name="configure">إعداد</string>
+    <string name="configure_api_key">إعداد مفتاح API</string>
+    <string name="expand_ai_settings">توسيع الإعدادات</string>
+    <string name="collapse_ai_settings">طي الإعدادات</string>
+    <string name="clear_cache">مسح ذاكرة التخزين المؤقت</string>
+</resources>

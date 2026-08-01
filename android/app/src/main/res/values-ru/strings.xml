@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="help_title">Помощь</string>
+    <string name="help_welcome">Добро пожаловать в Reverse Wiki</string>
+    <string name="help_subtitle">Узнайте то, о чём умалчивают туристические рассказы.</string>
+    <string name="help_photo_title">Сфотографируйте или импортируйте</string>
+    <string name="help_photo_description">Изображение — основная подсказка для определения места.</string>
+    <string name="help_location_title">Геопозиция необязательна</string>
+    <string name="help_location_description">GPS может помочь анализу, но игнорируется, если не соответствует фотографии.</string>
+    <string name="help_model_title">Выберите модель</string>
+    <string name="help_model_description">Выберите поставщика и модель с поддержкой изображений. Ключи остаются зашифрованными на этом устройстве.</string>
+    <string name="help_model_advice_title">Какую модель выбрать?</string>
+    <string name="help_model_advice_shared">Gemini может работать бесплатно с общим ключом приложения, но квота и производительность распределяются между пользователями.</string>
+    <string name="help_model_advice_key">Для более надёжной работы добавьте собственный бесплатный ключ Gemini. Также можно выбрать платные модели, например Claude или GPT.</string>
+    <string name="help_sources_title">Проверяйте источники</string>
+    <string name="help_sources_description">Результат содержит проверенный факт, его источники и карту только при подтверждённом местоположении.</string>
+    <string name="help_history_title">Возвращайтесь к открытиям</string>
+    <string name="help_history_description">Результаты анализа сохраняются в истории, и их можно удалить в любой момент.</string>
+    <string name="start">Начать</string>
+    <string name="close">Закрыть</string>
+    <string name="ai_title">Искусственный интеллект</string>
+    <string name="provider">Поставщик</string>
+    <string name="model">Модель</string>
+    <string name="choose_model">Выбрать модель</string>
+    <string name="loading_models">Загрузка моделей…</string>
+    <string name="refresh_models">Обновить модели</string>
+    <string name="configure">Настроить</string>
+    <string name="configure_api_key">Настроить ключ API</string>
+    <string name="expand_ai_settings">Развернуть настройки</string>
+    <string name="collapse_ai_settings">Свернуть настройки</string>
+    <string name="clear_cache">Очистить кэш</string>
+</resources>

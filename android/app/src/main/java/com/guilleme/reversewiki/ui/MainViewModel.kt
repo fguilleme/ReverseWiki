@@ -124,7 +124,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val analysis = app.repository.analyze(normalized, point, app.settings.configuration())
                 val path = persistImage(normalized)
                 withContext(Dispatchers.IO) {
-                    app.store.addHistory(path, analysis.fact, analysis.mapPoint, analysis.modelIdentifier)
+                    app.store.addHistory(
+                        path,
+                        analysis.fact,
+                        analysis.mapPoint,
+                        analysis.modelIdentifier,
+                        analysis.cacheKey,
+                    )
                 }
                 analysis to path
             }.onSuccess { (analysis, path) ->
@@ -150,7 +156,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             it.copy(
                 tab = MainTab.DISCOVER,
                 analysis = AnalysisState.Result(
-                    PlaceAnalysis(item.fact, item.mapPoint, item.modelIdentifier),
+                    PlaceAnalysis(item.fact, item.mapPoint, item.modelIdentifier, item.cacheKey),
                     item.imagePath,
                 ),
             )
@@ -165,7 +171,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun clearCache() = viewModelScope.launch(Dispatchers.IO) { app.store.clearCache() }
+    fun clearCache() = viewModelScope.launch(Dispatchers.IO) {
+        app.store.clearAll().forEach { File(it).delete() }
+        withContext(Dispatchers.Main) { refreshHistory() }
+    }
 
     private fun refreshHistory() {
         viewModelScope.launch {

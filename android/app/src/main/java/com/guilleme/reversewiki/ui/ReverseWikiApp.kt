@@ -4,7 +4,9 @@ import android.content.Intent
 import android.net.Uri
 import android.graphics.Bitmap
 import android.graphics.Color as AndroidColor
+import android.view.MotionEvent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,12 +23,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -45,6 +55,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -59,14 +70,19 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -76,6 +92,7 @@ import com.guilleme.reversewiki.model.HistoryItem
 import com.guilleme.reversewiki.model.PhotoConfidence
 import com.guilleme.reversewiki.model.PlaceAnalysis
 import com.guilleme.reversewiki.model.accuracyMeters
+import com.guilleme.reversewiki.R
 import org.maplibre.android.MapLibre
 import org.maplibre.android.annotations.MarkerOptions
 import org.maplibre.android.camera.CameraPosition
@@ -102,7 +119,8 @@ fun ReverseWikiApp(viewModel: MainViewModel, onCamera: () -> Unit, onImport: () 
     val onboarding = remember {
         appContext.getSharedPreferences("onboarding", android.content.Context.MODE_PRIVATE)
     }
-    var showHelp by remember { mutableStateOf(!onboarding.getBoolean("help_seen", false)) }
+    var isFirstHelp by remember { mutableStateOf(!onboarding.getBoolean("help_seen", false)) }
+    var showHelp by remember { mutableStateOf(isFirstHelp) }
     var showConfiguration by remember { mutableStateOf(false) }
 
     MaterialTheme(colorScheme = androidx.compose.material3.darkColorScheme(primary = Color(0xFF6C72FF))) {
@@ -133,11 +151,11 @@ fun ReverseWikiApp(viewModel: MainViewModel, onCamera: () -> Unit, onImport: () 
         ) { padding ->
             Box(Modifier.fillMaxSize().padding(padding)) {
                 if (state.tab == MainTab.HISTORY) {
-                    HistoryScreen(state.history, viewModel::openHistory, viewModel::deleteHistory)
+                    HistoryScreen(state.history, viewModel::openHistory, viewModel::deleteHistory, viewModel::clearCache)
                 } else when (val analysis = state.analysis) {
                     AnalysisState.Ready -> DiscoverScreen(
                         state, onCamera, onImport, viewModel::setProvider, viewModel::setModel,
-                        { showConfiguration = true }, viewModel::clearCache,
+                        { showConfiguration = true }, viewModel::refreshModels,
                     )
                     AnalysisState.Processing -> ProcessingScreen(viewModel::cancelAnalysis)
                     is AnalysisState.Result -> ResultScreen(analysis.analysis, analysis.imagePath, viewModel::reset)
@@ -145,8 +163,9 @@ fun ReverseWikiApp(viewModel: MainViewModel, onCamera: () -> Unit, onImport: () 
                 }
             }
         }
-        if (showHelp) HelpDialog {
+        if (showHelp) HelpDialog(isFirstLaunch = isFirstHelp) {
             onboarding.edit().putBoolean("help_seen", true).apply()
+            isFirstHelp = false
             showHelp = false
         }
         if (showConfiguration) ConfigurationDialog(
@@ -184,7 +203,7 @@ private fun DiscoverScreen(
     onProvider: (LLMProvider) -> Unit,
     onModel: (String) -> Unit,
     onConfigure: () -> Unit,
-    onClearCache: () -> Unit,
+    onRefreshModels: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
@@ -203,7 +222,7 @@ private fun DiscoverScreen(
                 )
             }
         }
-        item { AISettingsCard(state, onProvider, onModel, onConfigure, onClearCache) }
+        item { AISettingsCard(state, onProvider, onModel, onConfigure, onRefreshModels) }
         item {
             Button(onClick = onCamera, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Default.CameraAlt, null); Text("  Prendre une photo")
@@ -223,46 +242,150 @@ private fun AISettingsCard(
     onProvider: (LLMProvider) -> Unit,
     onModel: (String) -> Unit,
     onConfigure: () -> Unit,
-    onClearCache: () -> Unit,
+    onRefreshModels: () -> Unit,
 ) {
+    var expanded by remember { mutableStateOf(false) }
     var providerMenu by remember { mutableStateOf(false) }
     var modelMenu by remember { mutableStateOf(false) }
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Intelligence artificielle", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                IconButton(onClick = onConfigure) { Icon(Icons.Default.Settings, "Configurer") }
-            }
-            Box {
-                OutlinedButton(onClick = { providerMenu = true }, Modifier.fillMaxWidth()) {
-                    Text("${state.provider.displayName} — ${if (state.keyPresent) "clé configurée" else "à configurer"}")
+    val selectedModelName = state.models.firstOrNull { it.id == state.model }?.name
+        ?: state.model.ifEmpty { stringResource(R.string.choose_model) }
+    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp)) {
+        Column(Modifier.padding(2.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (!expanded) {
+                Row(
+                    Modifier.fillMaxWidth().clickable { expanded = true }.padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        Icons.Default.AutoAwesome,
+                        null,
+                        Modifier.size(19.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        selectedModelName,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Icon(
+                        Icons.Default.KeyboardArrowDown,
+                        stringResource(R.string.expand_ai_settings),
+                        Modifier.size(24.dp),
+                    )
                 }
-                DropdownMenu(providerMenu, { providerMenu = false }) {
-                    LLMProvider.entries.forEach { provider ->
-                        DropdownMenuItem(
-                            text = { Text(provider.displayName) },
-                            onClick = { providerMenu = false; onProvider(provider) },
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.AutoAwesome,
+                        null,
+                        Modifier.size(19.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        stringResource(R.string.ai_title),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f).padding(start = 7.dp),
+                    )
+                    IconButton(onClick = onConfigure, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            Icons.Default.VpnKey,
+                            stringResource(R.string.configure_api_key),
+                            Modifier.size(18.dp),
+                        )
+                    }
+                    IconButton(onClick = { expanded = false }, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            Icons.Default.KeyboardArrowUp,
+                            stringResource(R.string.collapse_ai_settings),
+                            Modifier.size(19.dp),
                         )
                     }
                 }
-            }
-            Box {
-                OutlinedButton(
-                    onClick = { modelMenu = true },
-                    enabled = state.models.isNotEmpty(),
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text(if (state.modelLoading) "Chargement…" else state.model.ifEmpty { "Aucun modèle" }) }
-                DropdownMenu(modelMenu, { modelMenu = false }) {
-                    state.models.forEach { model ->
-                        DropdownMenuItem(text = { Text(model.name) }, onClick = {
-                            modelMenu = false; onModel(model.id)
-                        })
+
+                Box(Modifier.fillMaxWidth()) {
+                    AISelectionRow(
+                        label = stringResource(R.string.provider),
+                        value = state.provider.displayName,
+                        enabled = true,
+                        onClick = { providerMenu = true },
+                    )
+                    DropdownMenu(providerMenu, { providerMenu = false }) {
+                        LLMProvider.entries.forEach { provider ->
+                            DropdownMenuItem(
+                                text = { Text(provider.displayName) },
+                                onClick = { providerMenu = false; onProvider(provider) },
+                            )
+                        }
+                    }
+                }
+
+                Box(Modifier.fillMaxWidth()) {
+                    AISelectionRow(
+                        label = stringResource(R.string.model),
+                        value = selectedModelName,
+                        enabled = !state.modelLoading && state.models.isNotEmpty(),
+                        onClick = { modelMenu = true },
+                    )
+                    DropdownMenu(modelMenu, { modelMenu = false }) {
+                        state.models.forEach { model ->
+                            DropdownMenuItem(text = { Text(model.name) }, onClick = {
+                                modelMenu = false; onModel(model.id)
+                            })
+                        }
+                    }
+                }
+
+                when {
+                    state.modelLoading -> Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                        Text(stringResource(R.string.loading_models), style = MaterialTheme.typography.labelMedium)
+                    }
+                    state.modelError != null -> Row(verticalAlignment = Alignment.Top) {
+                        Text(
+                            state.modelError,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        TextButton(onClick = onConfigure) { Text(stringResource(R.string.configure)) }
+                    }
+                    else -> TextButton(onClick = onRefreshModels) {
+                        Icon(Icons.Default.Refresh, null, Modifier.size(18.dp))
+                        Text(stringResource(R.string.refresh_models), modifier = Modifier.padding(start = 6.dp))
                     }
                 }
             }
-            state.modelError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            TextButton(onClick = onClearCache) { Text("Effacer le cache") }
         }
+    }
+}
+
+@Composable
+private fun AISelectionRow(label: String, value: String, enabled: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable(enabled = enabled, onClick = onClick).padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+        Text(
+            value,
+            maxLines = 1,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1.4f),
+            textAlign = TextAlign.End,
+        )
+        Icon(
+            Icons.Default.SwapVert,
+            contentDescription = null,
+            modifier = Modifier.padding(start = 6.dp).size(16.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -300,17 +423,33 @@ private fun ResultScreen(analysis: PlaceAnalysis, imagePath: String, onRestart: 
         item {
             AsyncImage(
                 model = File(imagePath), contentDescription = fact.lieu,
-                modifier = Modifier.fillMaxWidth().height(280.dp), contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxWidth().height(280.dp).clip(RoundedCornerShape(24.dp)),
+                contentScale = ContentScale.Crop,
             )
         }
         item {
             Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(fact.lieu, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                    Text(fact.verifiedFact, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        fact.lieu,
+                        fontSize = 21.sp,
+                        lineHeight = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        fact.verifiedFact,
+                        fontSize = 15.sp,
+                        lineHeight = 21.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                     HorizontalDivider()
-                    Text("Le récit courant", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(fact.officialFact)
+                    Text(
+                        "Le récit courant",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(fact.officialFact, fontSize = 14.sp, lineHeight = 20.sp)
                 }
             }
         }
@@ -362,12 +501,41 @@ private fun ResultMap(
 ) {
     val context = LocalContext.current
     val latestSnapshot by rememberUpdatedState(onSnapshot)
-    val mapView = remember {
+    val mapView = remember(latitude, longitude, radius) {
         MapLibre.getInstance(context)
-        MapView(context).also {
-            it.onCreate(null)
-            it.onStart()
-            it.onResume()
+        MapView(context).also { view ->
+            view.onCreate(null)
+            view.onStart()
+            view.onResume()
+            view.setOnTouchListener { touchedView, event ->
+                val keepGestureInMap = when (event.actionMasked) {
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> false
+                    else -> true
+                }
+                touchedView.parent?.requestDisallowInterceptTouchEvent(keepGestureInMap)
+                false
+            }
+            view.getMapAsync { map ->
+                val point = LatLng(latitude, longitude)
+                map.cameraPosition = CameraPosition.Builder()
+                    .target(point)
+                    .zoom(mapZoom(radius))
+                    .build()
+                map.setStyle(OPEN_MAP_STYLE) { style ->
+                    radius?.let {
+                        style.addSource(GeoJsonSource(ACCURACY_SOURCE, accuracyPolygon(latitude, longitude, it)))
+                        style.addLayer(
+                            FillLayer(ACCURACY_LAYER, ACCURACY_SOURCE).withProperties(
+                                fillColor(AndroidColor.argb(55, 33, 150, 243)),
+                                fillOutlineColor(AndroidColor.rgb(33, 150, 243)),
+                            )
+                        )
+                    }
+                    map.clear()
+                    map.addMarker(MarkerOptions().position(point).title("Position"))
+                    view.postDelayed({ map.snapshot { bitmap -> latestSnapshot(bitmap) } }, 1_500)
+                }
+            }
         }
     }
     DisposableEffect(mapView) {
@@ -385,29 +553,6 @@ private fun ResultMap(
         AndroidView(
             factory = { mapView },
             modifier = Modifier.fillMaxWidth().height(240.dp),
-            update = { view ->
-                view.getMapAsync { map ->
-                    val point = LatLng(latitude, longitude)
-                    map.cameraPosition = CameraPosition.Builder()
-                        .target(point)
-                        .zoom(mapZoom(radius))
-                        .build()
-                    map.setStyle(OPEN_MAP_STYLE) { style ->
-                        radius?.let {
-                            style.addSource(GeoJsonSource(ACCURACY_SOURCE, accuracyPolygon(latitude, longitude, it)))
-                            style.addLayer(
-                                FillLayer(ACCURACY_LAYER, ACCURACY_SOURCE).withProperties(
-                                    fillColor(AndroidColor.argb(55, 33, 150, 243)),
-                                    fillOutlineColor(AndroidColor.rgb(33, 150, 243)),
-                                )
-                            )
-                        }
-                        map.clear()
-                        map.addMarker(MarkerOptions().position(point).title("Position"))
-                        view.postDelayed({ map.snapshot { bitmap -> latestSnapshot(bitmap) } }, 1_500)
-                    }
-                }
-            }
         )
         Text(
             "© OpenStreetMap contributors · OpenFreeMap",
@@ -458,21 +603,58 @@ private fun HistoryScreen(
     history: List<HistoryItem>,
     onOpen: (HistoryItem) -> Unit,
     onDelete: (HistoryItem) -> Unit,
+    onClearCache: () -> Unit,
 ) {
     if (history.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Aucune analyse enregistrée") }
+        Column(
+            Modifier.fillMaxSize().padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text("Aucune analyse enregistrée")
+            TextButton(onClick = onClearCache) { Text(stringResource(R.string.clear_cache)) }
+        }
         return
     }
     LazyColumn(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item {
+            TextButton(onClick = onClearCache, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.clear_cache))
+            }
+        }
         items(history, key = { it.id }) { item ->
             Card(onClick = { onOpen(item) }, modifier = Modifier.fillMaxWidth()) {
-                Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    AsyncImage(File(item.imagePath), null, Modifier.size(72.dp), contentScale = ContentScale.Crop)
-                    Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                        Text(item.fact.lieu, fontWeight = FontWeight.Bold)
-                        Text(DateFormat.getDateTimeInstance().format(Date(item.createdAt)))
+                Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    AsyncImage(
+                        File(item.imagePath),
+                        null,
+                        Modifier.size(64.dp).clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop,
+                    )
+                    Column(Modifier.weight(1f).padding(horizontal = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            item.fact.lieu,
+                            fontSize = 15.sp,
+                            lineHeight = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            DateFormat.getDateTimeInstance().format(Date(item.createdAt)),
+                            fontSize = 12.sp,
+                            lineHeight = 15.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
-                    IconButton(onClick = { onDelete(item) }) { Icon(Icons.Default.Delete, "Supprimer") }
+                    IconButton(onClick = { onDelete(item) }, modifier = Modifier.size(44.dp)) {
+                        Icon(
+                            Icons.Default.Delete,
+                            "Supprimer",
+                            modifier = Modifier.size(27.dp),
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    }
                 }
             }
         }
@@ -523,17 +705,108 @@ private fun ConfigurationDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HelpDialog(onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Bienvenue dans Reverse Wiki") },
-        text = {
-            Text(
-                "Prenez ou importez une photo d’un lieu. L’application l’identifie, vérifie un récit historique et affiche ses sources. " +
-                    "Gemini propose une offre gratuite avec des quotas variables. Pour un usage fiable, configurez votre propre clé ou choisissez Claude, GPT, Kimi ou OpenRouter.",
-            )
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Compris") } },
-    )
+private fun HelpDialog(isFirstLaunch: Boolean, onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = { if (!isFirstLaunch) onDismiss() },
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = !isFirstLaunch,
+            dismissOnClickOutside = false,
+        ),
+    ) {
+        Surface(Modifier.fillMaxSize()) {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text(stringResource(R.string.help_title)) },
+                        actions = {
+                            if (!isFirstLaunch) {
+                                IconButton(onClick = onDismiss) {
+                                    Icon(Icons.Default.Close, stringResource(R.string.close))
+                                }
+                            }
+                        },
+                    )
+                },
+                bottomBar = {
+                    Surface(tonalElevation = 3.dp) {
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
+                        ) {
+                            Text(stringResource(if (isFirstLaunch) R.string.start else R.string.close))
+                        }
+                    }
+                },
+            ) { padding ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    item {
+                        Icon(
+                            Icons.Default.Public,
+                            contentDescription = null,
+                            modifier = Modifier.size(72.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    item {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                stringResource(R.string.help_welcome),
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                            )
+                            Text(
+                                stringResource(R.string.help_subtitle),
+                                style = MaterialTheme.typography.titleMedium,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    item { HelpRow(Icons.Default.CameraAlt, R.string.help_photo_title, R.string.help_photo_description) }
+                    item { HelpRow(Icons.Default.LocationOn, R.string.help_location_title, R.string.help_location_description) }
+                    item { HelpRow(Icons.Default.AutoAwesome, R.string.help_model_title, R.string.help_model_description) }
+                    item { ModelChoiceAdvice() }
+                    item { HelpRow(Icons.Default.CheckCircle, R.string.help_sources_title, R.string.help_sources_description) }
+                    item { HelpRow(Icons.Default.History, R.string.help_history_title, R.string.help_history_description) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModelChoiceAdvice() {
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.primary)
+                Text(stringResource(R.string.help_model_advice_title), fontWeight = FontWeight.Bold)
+            }
+            Text(stringResource(R.string.help_model_advice_shared))
+            Text(stringResource(R.string.help_model_advice_key), fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+@Composable
+private fun HelpRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: Int,
+    description: Int,
+) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Icon(icon, null, modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(stringResource(title), fontWeight = FontWeight.Bold)
+            Text(stringResource(description), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
 }

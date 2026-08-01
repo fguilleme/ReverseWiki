@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Android Keystore keys are not restored after uninstall. Never restore
+         ciphertext that a newly generated device key could not decrypt. -->
+    <exclude domain="sharedpref" path="secure_llm_keys.xml" />
+</full-backup-content>

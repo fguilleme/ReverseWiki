@@ -40,6 +40,6 @@ class PlaceRepository(
         }
         val resolved = photoPoint ?: location ?: fact.identifiedPoint() ?: geocoder.coordinate(fact.lieu)
         coroutineContext.ensureActive()
-        return PlaceAnalysis(fact, resolved, identifier)
+        return PlaceAnalysis(fact, resolved, identifier, key)
     }
 }

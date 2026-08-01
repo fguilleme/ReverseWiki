@@ -35,7 +35,9 @@ class SecureKeyStore(context: Context) {
         val encrypted = cipher.doFinal(value.trim().toByteArray())
         val payload = Base64.encodeToString(cipher.iv, Base64.NO_WRAP) + ":" +
             Base64.encodeToString(encrypted, Base64.NO_WRAP)
-        preferences.edit().putString(provider.name, payload).apply()
+        check(preferences.edit().putString(provider.name, payload).commit()) {
+            "Unable to persist the encrypted API key"
+        }
     }
 
     private fun secretKey(): SecretKey {

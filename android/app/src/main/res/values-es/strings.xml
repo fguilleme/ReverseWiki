@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="help_title">Ayuda</string>
+    <string name="help_welcome">Te damos la bienvenida a Reverse Wiki</string>
+    <string name="help_subtitle">Descubre lo que no cuentan los relatos turísticos.</string>
+    <string name="help_photo_title">Haz o importa una foto</string>
+    <string name="help_photo_description">La imagen es la pista principal utilizada para identificar el lugar.</string>
+    <string name="help_location_title">La ubicación es opcional</string>
+    <string name="help_location_description">El GPS puede ayudar al análisis, pero se ignora si no coincide con la foto.</string>
+    <string name="help_model_title">Elige tu modelo</string>
+    <string name="help_model_description">Selecciona un proveedor y un modelo compatible con imágenes. Las claves permanecen cifradas en este dispositivo.</string>
+    <string name="help_model_advice_title">¿Qué modelo elegir?</string>
+    <string name="help_model_advice_shared">Gemini puede funcionar gratis con la clave compartida de la app, pero la cuota y el rendimiento se comparten entre los usuarios.</string>
+    <string name="help_model_advice_key">Para un uso más fiable, añade tu propia clave gratuita de Gemini. También puedes elegir modelos de pago como Claude o GPT.</string>
+    <string name="help_sources_title">Comprueba las fuentes</string>
+    <string name="help_sources_description">El resultado presenta un hecho verificado, sus fuentes y un mapa solo cuando se confirma la ubicación.</string>
+    <string name="help_history_title">Recupera tus descubrimientos</string>
+    <string name="help_history_description">Los análisis se guardan en el historial y pueden eliminarse en cualquier momento.</string>
+    <string name="start">Empezar</string>
+    <string name="close">Cerrar</string>
+    <string name="ai_title">Inteligencia artificial</string>
+    <string name="provider">Proveedor</string>
+    <string name="model">Modelo</string>
+    <string name="choose_model">Elegir un modelo</string>
+    <string name="loading_models">Cargando modelos…</string>
+    <string name="refresh_models">Actualizar modelos</string>
+    <string name="configure">Configurar</string>
+    <string name="configure_api_key">Configurar la clave API</string>
+    <string name="expand_ai_settings">Desplegar los ajustes</string>
+    <string name="collapse_ai_settings">Plegar los ajustes</string>
+    <string name="clear_cache">Vaciar la caché</string>
+</resources>

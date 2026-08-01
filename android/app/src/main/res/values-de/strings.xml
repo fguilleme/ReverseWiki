@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="help_title">Hilfe</string>
+    <string name="help_welcome">Willkommen bei Reverse Wiki</string>
+    <string name="help_subtitle">Entdecken Sie, was touristische Erzählungen verschweigen.</string>
+    <string name="help_photo_title">Fotografieren oder importieren</string>
+    <string name="help_photo_description">Das Bild ist der wichtigste Hinweis zur Identifizierung des Ortes.</string>
+    <string name="help_location_title">Der Standort bleibt optional</string>
+    <string name="help_location_description">GPS kann die Analyse unterstützen, wird aber ignoriert, wenn es nicht zum Foto passt.</string>
+    <string name="help_model_title">Wählen Sie Ihr Modell</string>
+    <string name="help_model_description">Wählen Sie einen Anbieter und ein bildfähiges Modell. Die Schlüssel bleiben auf diesem Gerät verschlüsselt.</string>
+    <string name="help_model_advice_title">Welches Modell wählen?</string>
+    <string name="help_model_advice_shared">Gemini kann mit dem gemeinsamen App-Schlüssel kostenlos genutzt werden, aber Kontingent und Leistung werden unter den Nutzern geteilt.</string>
+    <string name="help_model_advice_key">Für eine zuverlässigere Nutzung fügen Sie Ihren eigenen kostenlosen Gemini-Schlüssel hinzu. Alternativ können Sie kostenpflichtige Modelle wie Claude oder GPT wählen.</string>
+    <string name="help_sources_title">Quellen überprüfen</string>
+    <string name="help_sources_description">Das Ergebnis zeigt einen überprüften Fakt, seine Quellen und nur bei bestätigtem Standort eine Karte.</string>
+    <string name="help_history_title">Entdeckungen wiederfinden</string>
+    <string name="help_history_description">Analysen werden im Verlauf gespeichert und können jederzeit gelöscht werden.</string>
+    <string name="start">Loslegen</string>
+    <string name="close">Schließen</string>
+    <string name="ai_title">Künstliche Intelligenz</string>
+    <string name="provider">Anbieter</string>
+    <string name="model">Modell</string>
+    <string name="choose_model">Modell auswählen</string>
+    <string name="loading_models">Modelle werden geladen…</string>
+    <string name="refresh_models">Modelle aktualisieren</string>
+    <string name="configure">Konfigurieren</string>
+    <string name="configure_api_key">API-Schlüssel konfigurieren</string>
+    <string name="expand_ai_settings">Einstellungen ausklappen</string>
+    <string name="collapse_ai_settings">Einstellungen einklappen</string>
+    <string name="clear_cache">Cache leeren</string>
+</resources>

@@ -32,6 +32,7 @@ data class PlaceAnalysis(
     val fact: PlaceFact,
     val mapPoint: GeoPoint?,
     val modelIdentifier: String,
+    val cacheKey: String? = null,
 )
 
 data class HistoryItem(
@@ -41,6 +42,7 @@ data class HistoryItem(
     val fact: PlaceFact,
     val mapPoint: GeoPoint?,
     val modelIdentifier: String,
+    val cacheKey: String?,
 )
 
 fun PlaceFact.identifiedPoint(): GeoPoint? = latitude?.let { lat ->

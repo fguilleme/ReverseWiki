@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="help_title">Help</string>
+    <string name="help_welcome">Welcome to Reverse Wiki</string>
+    <string name="help_subtitle">Discover what tourist narratives leave out.</string>
+    <string name="help_photo_title">Take or import a photo</string>
+    <string name="help_photo_description">The image is the primary clue used to identify the place.</string>
+    <string name="help_location_title">Location remains optional</string>
+    <string name="help_location_description">GPS can assist the analysis, but it is ignored if it does not match the photo.</string>
+    <string name="help_model_title">Choose your model</string>
+    <string name="help_model_description">Select a provider and a model that supports images. Keys remain encrypted on this device.</string>
+    <string name="help_model_advice_title">Which model should you choose?</string>
+    <string name="help_model_advice_shared">Gemini can run for free with the app’s shared key, but quota and performance are shared among users.</string>
+    <string name="help_model_advice_key">For more reliable use, add your own free Gemini key. You can also choose paid models such as Claude or GPT.</string>
+    <string name="help_sources_title">Check the sources</string>
+    <string name="help_sources_description">The result presents a verified fact, its sources, and a map only when the location is confirmed.</string>
+    <string name="help_history_title">Find your discoveries again</string>
+    <string name="help_history_description">Analyses are saved in history and can be deleted at any time.</string>
+    <string name="start">Get started</string>
+    <string name="close">Close</string>
+    <string name="ai_title">Artificial intelligence</string>
+    <string name="provider">Provider</string>
+    <string name="model">Model</string>
+    <string name="choose_model">Choose a model</string>
+    <string name="loading_models">Loading models…</string>
+    <string name="refresh_models">Refresh models</string>
+    <string name="configure">Configure</string>
+    <string name="configure_api_key">Configure API key</string>
+    <string name="expand_ai_settings">Expand settings</string>
+    <string name="collapse_ai_settings">Collapse settings</string>
+    <string name="clear_cache">Clear cache</string>
+</resources>

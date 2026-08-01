@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="help_title">ヘルプ</string>
+    <string name="help_welcome">Reverse Wikiへようこそ</string>
+    <string name="help_subtitle">観光案内では語られない物語を発見しましょう。</string>
+    <string name="help_photo_title">撮影または読み込み</string>
+    <string name="help_photo_description">画像は場所を特定するための主な手掛かりです。</string>
+    <string name="help_location_title">位置情報は任意です</string>
+    <string name="help_location_description">GPSは分析の助けになりますが、写真と一致しない場合は無視されます。</string>
+    <string name="help_model_title">モデルを選択</string>
+    <string name="help_model_description">画像対応のプロバイダーとモデルを選択してください。キーはこの端末上で暗号化されます。</string>
+    <string name="help_model_advice_title">どのモデルを選びますか？</string>
+    <string name="help_model_advice_shared">Geminiはアプリの共有キーで無料利用できますが、利用枠とパフォーマンスはユーザー間で共有されます。</string>
+    <string name="help_model_advice_key">より安定して利用するには、無料の個人用Geminiキーを追加してください。ClaudeやGPTなどの有料モデルも選べます。</string>
+    <string name="help_sources_title">出典を確認</string>
+    <string name="help_sources_description">確認済みの事実と出典を表示し、位置が確認できた場合にのみ地図を表示します。</string>
+    <string name="help_history_title">発見を振り返る</string>
+    <string name="help_history_description">分析結果は履歴に保存され、いつでも削除できます。</string>
+    <string name="start">始める</string>
+    <string name="close">閉じる</string>
+    <string name="ai_title">人工知能</string>
+    <string name="provider">プロバイダー</string>
+    <string name="model">モデル</string>
+    <string name="choose_model">モデルを選択</string>
+    <string name="loading_models">モデルを読み込み中…</string>
+    <string name="refresh_models">モデルを更新</string>
+    <string name="configure">設定</string>
+    <string name="configure_api_key">APIキーを設定</string>
+    <string name="expand_ai_settings">設定を展開</string>
+    <string name="collapse_ai_settings">設定を折りたたむ</string>
+    <string name="clear_cache">キャッシュを消去</string>
+</resources>

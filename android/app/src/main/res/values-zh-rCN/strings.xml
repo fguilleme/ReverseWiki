@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="help_title">帮助</string>
+    <string name="help_welcome">欢迎使用 Reverse Wiki</string>
+    <string name="help_subtitle">发现旅游叙事中未曾讲述的故事。</string>
+    <string name="help_photo_title">拍摄或导入照片</string>
+    <string name="help_photo_description">图像是识别地点的主要线索。</string>
+    <string name="help_location_title">位置信息可选</string>
+    <string name="help_location_description">GPS 可以辅助分析，但如果与照片不符则会被忽略。</string>
+    <string name="help_model_title">选择模型</string>
+    <string name="help_model_description">请选择支持图像的提供商和模型。密钥会加密保存在此设备上。</string>
+    <string name="help_model_advice_title">应该选择哪个模型？</string>
+    <string name="help_model_advice_shared">Gemini 可使用应用的共享密钥免费运行，但配额和性能由所有用户共享。</string>
+    <string name="help_model_advice_key">若要获得更可靠的体验，请添加自己的免费 Gemini 密钥。你也可以选择 Claude 或 GPT 等付费模型。</string>
+    <string name="help_sources_title">核查来源</string>
+    <string name="help_sources_description">结果会显示经过核实的事实及其来源，并且仅在位置得到确认时显示地图。</string>
+    <string name="help_history_title">重温你的发现</string>
+    <string name="help_history_description">分析结果会保存在历史记录中，并可随时删除。</string>
+    <string name="start">开始</string>
+    <string name="close">关闭</string>
+    <string name="ai_title">人工智能</string>
+    <string name="provider">提供商</string>
+    <string name="model">模型</string>
+    <string name="choose_model">选择模型</string>
+    <string name="loading_models">正在加载模型…</string>
+    <string name="refresh_models">刷新模型</string>
+    <string name="configure">配置</string>
+    <string name="configure_api_key">配置 API 密钥</string>
+    <string name="expand_ai_settings">展开设置</string>
+    <string name="collapse_ai_settings">收起设置</string>
+    <string name="clear_cache">清除缓存</string>
+</resources>

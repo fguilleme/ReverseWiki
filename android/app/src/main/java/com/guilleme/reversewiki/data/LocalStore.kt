@@ -11,7 +11,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.security.MessageDigest
 
-class LocalStore(context: Context) : SQLiteOpenHelper(context, "reversewiki.db", null, 1) {
+class LocalStore(context: Context) : SQLiteOpenHelper(context, "reversewiki.db", null, 2) {
     private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -24,12 +24,15 @@ class LocalStore(context: Context) : SQLiteOpenHelper(context, "reversewiki.db",
                 fact_json TEXT NOT NULL,
                 latitude REAL,
                 longitude REAL,
-                model_identifier TEXT NOT NULL
+                model_identifier TEXT NOT NULL,
+                cache_key TEXT
             )""".trimIndent(),
         )
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) db.execSQL("ALTER TABLE history ADD COLUMN cache_key TEXT")
+    }
 
     fun cachedFact(key: String): PlaceFact? = readableDatabase.query(
         "cache", arrayOf("fact_json"), "cache_key=?", arrayOf(key), null, null, null,
@@ -52,13 +55,20 @@ class LocalStore(context: Context) : SQLiteOpenHelper(context, "reversewiki.db",
 
     fun clearCache() = writableDatabase.delete("cache", null, null)
 
-    fun addHistory(imagePath: String, fact: PlaceFact, point: GeoPoint?, modelIdentifier: String) {
+    fun addHistory(
+        imagePath: String,
+        fact: PlaceFact,
+        point: GeoPoint?,
+        modelIdentifier: String,
+        cacheKey: String?,
+    ) {
         writableDatabase.insert("history", null, ContentValues().apply {
             put("created_at", System.currentTimeMillis())
             put("image_path", imagePath)
             put("fact_json", json.encodeToString(fact))
             point?.let { put("latitude", it.latitude); put("longitude", it.longitude) }
             put("model_identifier", modelIdentifier)
+            put("cache_key", cacheKey)
         })
     }
 
@@ -78,13 +88,47 @@ class LocalStore(context: Context) : SQLiteOpenHelper(context, "reversewiki.db",
                         mapPoint = if (cursor.isNull(latitudeIndex) || cursor.isNull(longitudeIndex)) null
                         else GeoPoint(cursor.getDouble(latitudeIndex), cursor.getDouble(longitudeIndex)),
                         modelIdentifier = cursor.getString(cursor.getColumnIndexOrThrow("model_identifier")),
+                        cacheKey = cursor.getColumnIndex("cache_key").takeIf { it >= 0 && !cursor.isNull(it) }
+                            ?.let(cursor::getString),
                     )
                 }.getOrNull()?.let(::add)
             }
         }
     }
 
-    fun deleteHistory(id: Long) = writableDatabase.delete("history", "id=?", arrayOf(id.toString()))
+    fun deleteHistory(id: Long) {
+        val database = writableDatabase
+        database.beginTransaction()
+        try {
+            val cacheKey = database.query(
+                "history", arrayOf("cache_key"), "id=?", arrayOf(id.toString()), null, null, null,
+            ).use { cursor ->
+                if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getString(0) else null
+            }
+            database.delete("history", "id=?", arrayOf(id.toString()))
+            if (cacheKey == null) database.delete("cache", null, null)
+            else database.delete("cache", "cache_key=?", arrayOf(cacheKey))
+            database.setTransactionSuccessful()
+        } finally {
+            database.endTransaction()
+        }
+    }
+
+    fun clearAll(): List<String> {
+        val database = writableDatabase
+        val imagePaths = database.query(
+            "history", arrayOf("image_path"), null, null, null, null, null,
+        ).use { cursor -> buildList { while (cursor.moveToNext()) add(cursor.getString(0)) } }
+        database.beginTransaction()
+        try {
+            database.delete("cache", null, null)
+            database.delete("history", null, null)
+            database.setTransactionSuccessful()
+        } finally {
+            database.endTransaction()
+        }
+        return imagePaths
+    }
 
     companion object {
         fun cacheKey(image: ByteArray, point: GeoPoint?, model: String): String {
