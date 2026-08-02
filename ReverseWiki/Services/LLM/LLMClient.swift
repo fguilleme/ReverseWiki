@@ -57,7 +57,9 @@ enum FactPrompt {
             forLanguageCode: Locale.current.language.languageCode?.identifier ?? "fr"
         ) ?? "français"
         return """
-    Tu es un historien fact-checker prudent. Analyse d’abord la photo pour identifier ce qui est \
+    Tu es un historien fact-checker prudent. Analyse cette photographie en utilisant tous les indices \
+    visuels disponibles, comme les paysages, bâtiments, végétation, et éléments culturels, pour \
+    déterminer la localisation la plus précise possible. Analyse la photo pour identifier ce qui est \
     réellement visible, sans aucun indice géographique externe. Produis ensuite un fait historique \
     peu connu ou corrige avec nuance un récit touristique répandu. N'invente jamais de source. \
     Cite uniquement des URL publiques et vérifiables. Si le lieu est ambigu, dis-le explicitement.
